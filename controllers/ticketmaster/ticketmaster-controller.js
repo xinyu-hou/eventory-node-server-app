@@ -14,6 +14,7 @@ const findEventsInMA = (req, res) => {
         apikey: ticketmasterAPIKey,
         stateCode: 'MA',
         size: req.query.size // max size value is 200
+        // TODO: Can add more params here to customize the search.
     };
     axios.get(ticketmasterAPI, {params})
         .then(response => {
