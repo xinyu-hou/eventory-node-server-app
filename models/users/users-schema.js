@@ -1,17 +1,19 @@
 import mongoose from 'mongoose';
+
 const UsersSchema = new mongoose.Schema({
     username: String,
     password: String,
-    activated: Boolean,
+    activated: { type: Boolean, default: false },
+    activationToken: String,
     firstName: String,
     lastName: String,
     displayName: String,
     profilePicture: Buffer,
     dateOfBirth: Date,
     location: String,
-    searchHistory: Array,
-    likedEvents: Array,
-    registeredEvents: Array
+    searchHistory: { type: Array, default: [] },
+    likedEvents: { type: Array, default: [] },
+    registeredEvents: { type: Array, default: [] }
 }, {collection: 'users'});
 
 export default UsersSchema;
