@@ -3,7 +3,6 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import UsersModel from "../../models/users/users-model.js";
-import {updateUserByUsername} from "../../models/users/users-dao.js";
 
 const UsersController = (app) => {
     app.get('/api/users', findAllUsers);
@@ -11,6 +10,7 @@ const UsersController = (app) => {
     app.delete('/api/users/:userId', deleteUser);
     app.put('/api/users/:userId', updateUser);
     app.get('/verify/:token', verifyUser);
+    app.post('/api/users/login', userLogin);
 };
 
 const findAllUsers = async (req, res) => {
@@ -34,7 +34,7 @@ const createUser = async (req, res) => {
             const updates = { activationToken: activationToken };
             await UsersDao.updateUserByUsername(username, updates);
             await sendActivationEmail(username, activationToken);
-            return res.status(201).json({ message: activationMessage });
+            return res.status(403).json({ message: activationMessage });
         }
         // If username is not used, generate activation token and hash password.
         const activationToken = crypto.randomBytes(64).toString('hex');
@@ -103,6 +103,42 @@ const sendActivationEmail = async (username, activationToken) => {
         replyTo: 'noreply@eventoryma.com'
     };
     await transporter.sendMail(mailOptions);
+}
+const userLogin = async (req, res) => {
+    const { username, password } = req.body;
+    try {
+        // Check if username exists in the database
+        const existingUser = await UsersDao.findOneUser(username);
+        // When username does not exist in the database
+        if (!existingUser) {
+            const errorMessage = 'User with this username does not exits.';
+            return res.status(404).json({ message: errorMessage });
+        }
+        // When username exists in the database, check if password is correct.
+        const passwordMatch = await bcrypt.compare(password, existingUser.password);
+        // When passwords do not match
+        if (!passwordMatch) {
+            const errorMessage = 'Invalid password.';
+            return res.status(401).json({ message: errorMessage });
+        }
+        // When entered password is valid, check if user account is activated.
+        // If account is not activated, renew token and send activation email.
+        if (existingUser.activated === false) {
+            const activationMessage = 'User with this username exists but the account is not activated. An ' +
+                'account activation email has been sent. Please use the link in the email to activate your account.'
+            const activationToken = crypto.randomBytes(64).toString('hex');
+            const updates = { activationToken: activationToken };
+            await UsersDao.updateUserByUsername(username, updates);
+            await sendActivationEmail(username, activationToken);
+            return res.status(403).json({ message: activationMessage });
+        }
+        // If account is activated, display welcome message.
+        const welcomeMessage = 'Welcome ' + existingUser.firstName;
+        return res.status(201).json({ message: welcomeMessage });
+    } catch (error) {
+        console.error('Failed to login user: ', error.message);
+        return res.status(500).json({ message: 'Server error.'});
+    }
 }
 
 export default UsersController;
