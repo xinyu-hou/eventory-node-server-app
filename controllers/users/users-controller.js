@@ -2,7 +2,7 @@ import * as UsersDao from '../../models/users/users-dao.js'
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
-import UsersModel from "../../models/users/users-model.js";
+import UsersModel from '../../models/users/users-model.js';
 
 const UsersController = (app) => {
     app.get('/api/users', findAllUsers);
@@ -111,7 +111,7 @@ const userLogin = async (req, res) => {
         const existingUser = await UsersDao.findOneUser(username);
         // When username does not exist in the database
         if (!existingUser) {
-            const errorMessage = 'User with this username does not exits.';
+            const errorMessage = 'User with this username does not exist.';
             return res.status(404).json({ message: errorMessage });
         }
         // When username exists in the database, check if password is correct.
