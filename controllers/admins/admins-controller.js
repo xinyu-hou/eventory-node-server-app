@@ -29,6 +29,6 @@ const adminLogin = async (req, res) => {
         console.error('Failed to login admin: ', error.message);
         return res.status(500).json({ message: 'Server error.'});
     }
-}
+};
 
 export default AdminsController;

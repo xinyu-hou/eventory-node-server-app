@@ -9,7 +9,7 @@ const UsersController = (app) => {
     app.post('/api/users', createUser);
     app.delete('/api/users/:userId', deleteUser);
     app.put('/api/users/:userId', updateUser);
-    app.get('/verify/:token', verifyUser);
+    app.get('/api/users/verify/:token', verifyUser);
     app.post('/api/users/login', userLogin);
 };
 
@@ -21,6 +21,7 @@ const findAllUsers = async (req, res) => {
 const createUser = async (req, res) => {
     const { username, password } = req.body;
     try {
+        // TODO: Check three tables. Make sure username is unique across all three user type tables.
         // Check if username (email address) exists in the database.
         const existingUser = await UsersDao.findOneUser(username);
         // If user exists and the account is activated,
@@ -103,7 +104,7 @@ const sendActivationEmail = async (username, activationToken) => {
         replyTo: 'noreply@eventoryma.com'
     };
     await transporter.sendMail(mailOptions);
-}
+};
 const userLogin = async (req, res) => {
     const { username, password } = req.body;
     try {
@@ -139,6 +140,6 @@ const userLogin = async (req, res) => {
         console.error('Failed to login user: ', error.message);
         return res.status(500).json({ message: 'Server error.'});
     }
-}
+};
 
 export default UsersController;
