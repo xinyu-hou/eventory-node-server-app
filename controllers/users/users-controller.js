@@ -29,8 +29,7 @@ const createUser = async (req, res) => {
             const errorMessage = 'User with this username already exists.';
             return res.status(400).json({ message: errorMessage });
         } else if (existingUser && existingUser.activated === false) {
-            const activationMessage = 'User with this username exists but the account is not activated. An ' +
-                'account activation email has been sent. Please use the link in the email to activate your account.'
+            const activationMessage = 'This account is not activated. A new activation link has been sent.';
             const activationToken = crypto.randomBytes(64).toString('hex');
             const updates = { activationToken: activationToken };
             await UsersDao.updateUserByUsername(username, updates);
@@ -106,7 +105,7 @@ const sendActivationEmail = async (username, activationToken) => {
         from: 'Eventory App <eventoryma@gmail.com>',
         to: username,
         subject: 'Activate you Eventory account',
-        text: `Please click the following link to verify your email address: ${process.env.BASE_URL}/verify/${activationToken}`,
+        text: `Please click the following link to verify your email address: ${process.env.BASE_URL}/api/users/verify/${activationToken}`,
         replyTo: 'noreply@eventoryma.com'
     };
     await transporter.sendMail(mailOptions);
