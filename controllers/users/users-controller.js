@@ -59,8 +59,14 @@ const createUser = async (req, res) => {
 const deleteUser = async (req, res) => {
     // TODO: Only the user themselves and admins can perform delete a user action.
     const userId = req.params.userId;
-    const status = await UsersDao.deleteUser(userId);
-    res.json(status);
+    await UsersDao.deleteUser(userId)
+        .then((status) => {
+            return res.status(201).json(status);
+        })
+        .catch ((error) => {
+            console.log('Failed to delete user: ' + error.message)
+            return res.status(400).json({ message: 'Failed to delete user.' });
+        });
 };
 const updateUser = async (req, res) => {
     const userId = req.params.userId;
