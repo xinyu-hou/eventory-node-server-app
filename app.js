@@ -1,4 +1,5 @@
 import express from 'express';
+import session from 'express-session';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import { config } from 'dotenv';
@@ -23,6 +24,12 @@ mongoose.connect(CONNECTION_STRING)
     });
 
 const app = express();
+app.use(session({
+    secret: process.env.SECRET_KEY,
+    // cookie: {secure: false},
+    resave: false,
+    saveUninitialized: false
+}));
 app.use(cors());
 app.use(bodyParser.json());
 TicketmasterController(app);

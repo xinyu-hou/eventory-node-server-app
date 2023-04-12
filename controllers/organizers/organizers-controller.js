@@ -9,7 +9,6 @@ const OrganizersController = (app) => {
     app.delete('/api/organizers/:organizerId', deleteOrganizer);
     app.put('/api/organizers/:organizerId', updateOrganizer);
     app.get('/api/organizers/verify/:token', verifyOrganizer);
-    app.post('/api/organizers/login', OrganizerLogin);
 };
 
 const findAllOrganizers = async (req, res) => {
@@ -17,7 +16,17 @@ const findAllOrganizers = async (req, res) => {
     res.json(organizers);
 };
 const createOrganizer = async (req, res) => {
-    // TODO
+    // const { username, password } = req.body;
+    // try {
+    //     const existingUser = await checkUsernameExistence(username);
+    //     if (existingUser) {
+    //         const errorMessage = 'User with this username already exists.';
+    //         return res.status(400).json({ message: errorMessage });
+    //     };
+    //     // TODO
+    // } catch (error) {
+    //
+    // };
 };
 const deleteOrganizer = async (req, res) => {
     // TODO: Only the organizer themselves and admins can perform delete an organizer action.
@@ -34,7 +43,5 @@ const updateOrganizer = async (req, res) => {
 const verifyOrganizer = async (req, res) => {
     // TODO
 };
-const OrganizerLogin = async (req, res) => {
-    // TODO
-};
+
 export default OrganizersController;

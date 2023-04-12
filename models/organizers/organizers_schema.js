@@ -9,6 +9,6 @@ const OrganizersSchema = new mongoose.Schema({
     profilePicture: Buffer,
     description: String,
     events: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EventsModel' }]
-}, {collection: 'admins'});
+}, {collection: 'organizers'});
 
 export default OrganizersSchema;

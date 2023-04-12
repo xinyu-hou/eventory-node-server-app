@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import UsersModel from '../../models/users/users-model.js';
+import {checkUsernameExistence} from '../../utils/utils.js';
 
 const UsersController = (app) => {
     app.get('/api/users', findAllUsers);
@@ -10,7 +11,6 @@ const UsersController = (app) => {
     app.delete('/api/users/:userId', deleteUser);
     app.put('/api/users/:userId', updateUser);
     app.get('/api/users/verify/:token', verifyUser);
-    app.post('/api/users/login', userLogin);
 };
 
 const findAllUsers = async (req, res) => {
@@ -21,20 +21,10 @@ const findAllUsers = async (req, res) => {
 const createUser = async (req, res) => {
     const { username, password } = req.body;
     try {
-        // TODO: Check three tables. Make sure username is unique across all three user type tables.
-        // Check if username (email address) exists in the database.
-        const existingUser = await UsersDao.findOneUser(username);
-        // If user exists and the account is activated,
-        if (existingUser && existingUser.activated === true) {
+        const existingUser = await checkUsernameExistence(username);
+        if (existingUser) {
             const errorMessage = 'User with this username already exists.';
             return res.status(400).json({ message: errorMessage });
-        } else if (existingUser && existingUser.activated === false) {
-            const activationMessage = 'This account is not activated. A new activation link has been sent.';
-            const activationToken = crypto.randomBytes(64).toString('hex');
-            const updates = { activationToken: activationToken };
-            await UsersDao.updateUserByUsername(username, updates);
-            await sendActivationEmail(username, activationToken);
-            return res.status(403).json({ message: activationMessage });
         }
         // If username is not used, generate activation token and hash password.
         const activationToken = crypto.randomBytes(64).toString('hex');
