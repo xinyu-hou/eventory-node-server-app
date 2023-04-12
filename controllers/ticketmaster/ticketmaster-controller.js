@@ -6,7 +6,7 @@ const ticketmasterAPI = 'https://app.ticketmaster.com/discovery/v2/events.json?'
 const ticketmasterAPIKey = process.env.TICKETMASTER_API_KEY;
 
 const TicketmasterController = (app) => {
-    app.get('/events', findEventsInMA);
+    app.get('/api/ticketmaster/events', findEventsInMA);
 };
 
 const findEventsInMA = (req, res) => {

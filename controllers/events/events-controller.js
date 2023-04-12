@@ -1,11 +1,11 @@
 import * as EventsDao from '../../models/events/events-dao.js';
 
 const EventsController = (app) => {
-    app.get('/api/events/', findAllEvents);
-    app.get('/api/events/:eventId', findEventById);
-    app.post('/api/events', createEvent);
-    app.delete('/api/events/:eventId', deleteEvent);
-    app.put('/api/events/:eventId', updateEvent);
+    app.get('/api/eventory/events/', findAllEvents);
+    app.get('/api/eventory/events/:eventId', findEventById);
+    app.post('/api/eventory/events', createEvent);
+    app.delete('/api/eventory/events/:eventId', deleteEvent);
+    app.put('/api/eventory/events/:eventId', updateEvent);
 };
 
 const findAllEvents = async (req, res) => {
