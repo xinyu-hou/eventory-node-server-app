@@ -30,6 +30,7 @@ const findEventsInMA = (req, res) => {
                     "segment": event.classifications[0].segment.name,
                     "genre": event.classifications[0].genre.name,
                     "subgenre": event.classifications[0].subGenre.name,
+                    "image": event.images[0],
                     "venueName": event._embedded.venues[0].name,
                     "venueCity": event._embedded.venues[0].city.name,
                     "venuePostalCode": event._embedded.venues[0].postalCode,

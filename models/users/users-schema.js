@@ -11,7 +11,6 @@ const UsersSchema = new mongoose.Schema({
     profilePicture: Buffer,
     dateOfBirth: Date,
     location: String,
-    searchHistory: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EventsModel' }],
     likedEvents: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EventsModel' }],
     registeredEvents: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EventsModel' }]
 }, {collection: 'users'});
