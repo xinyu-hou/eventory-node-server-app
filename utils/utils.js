@@ -18,18 +18,17 @@ export const checkUsernameExistence = async (username) => {
     return false;
 };
 
-export const checkUserType = async (username) => {
+export const checkUserExistence = async (username) => {
     const existingUser = await UsersDao.findOneUser(username);
     if (existingUser) {
-        return 'user';
+        return existingUser;
     };
     const existingOrganizer = await OrganizersDao.findOneOrganizer(username);
     if (existingOrganizer) {
-        return 'organizer';
+        return existingOrganizer;
     };
     const existingAdmin = await AdminsDao.findOneAdmin(username);
     if (existingAdmin) {
-        return 'admin';
-    }
-    // return 'nobody';
+        return existingAdmin;
+    };
 };

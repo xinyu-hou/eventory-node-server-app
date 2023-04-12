@@ -9,6 +9,7 @@ import UsersController from "./controllers/users/users-controller.js";
 import AdminsController from "./controllers/admins/admins-controller.js";
 import OrganizersController from "./controllers/organizers/organizers-controller.js";
 import EventsController from "./controllers/events/events-controller.js";
+import AuthController from "./controllers/auth/auth-controller.js";
 
 // Retrieve DB_CONNECTION_STRING env variable.
 config();
@@ -26,15 +27,18 @@ mongoose.connect(CONNECTION_STRING)
 const app = express();
 app.use(session({
     secret: process.env.SECRET_KEY,
-    // cookie: {secure: false},
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: true,
 }));
-app.use(cors());
+app.use(cors({
+    credentials: true,
+    origin: "http://localhost:3000",
+}));
 app.use(bodyParser.json());
 TicketmasterController(app);
 UsersController(app);
 AdminsController(app);
 OrganizersController(app);
 EventsController(app);
+AuthController(app);
 app.listen(process.env.PORT || 4000);
