@@ -3,6 +3,7 @@ import {checkUserExistence} from "../../utils/utils.js";
 
 const AuthController = (app) => {
     app.post('/api/login', everybodyLogin);
+    app.post('/api/logout', everybodyLogout);
 };
 
 const everybodyLogin = async (req, res) => {
@@ -29,7 +30,8 @@ const everybodyLogin = async (req, res) => {
         // (2) user or organizer: check if activated
         if (userRole === 'admin') {
             const welcomeMessage = 'Welcome ' + userRole + ' ' + userFirstName;
-            return res.status(201).json({ message: welcomeMessage });
+            req.session["currentUser"] = user;
+            return res.status(200).json({ message: welcomeMessage });
         }
         const activated = user.activated;
         if (!activated) {
@@ -38,11 +40,16 @@ const everybodyLogin = async (req, res) => {
         };
         // // If account is activated, display welcome message.
         const welcomeMessage = 'Welcome ' + userRole + ' ' + userFirstName;
-        return res.status(201).json({ message: welcomeMessage });
+        req.session["currentUser"] = user;
+        return res.status(200).json({ message: welcomeMessage });
     } catch (error) {
         console.error('Login failed: ', error.message);
         return res.status(500).json({message: 'Server error.'});
     };
+};
+const everybodyLogout = async (req, res) => {
+    req.session.destroy();
+    res.status(200).json({ message: 'Logout complete.' })
 };
 
 export default AuthController;

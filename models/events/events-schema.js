@@ -5,7 +5,9 @@ const EventsSchema = new mongoose.Schema({
     dateAndTime: { type: Date, required: true },
     address: { type: String, required: true },
     city: { type: String, required: true },
+    zipCode: { type: String, required: true },
     description: { type: String, required: true },
+    image: String,
     organizer: { type: mongoose.Schema.Types.ObjectId, ref: 'OrganizersModel' },
     interestedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'UsersModel' }],
     registeredUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'UsersModel' }]
