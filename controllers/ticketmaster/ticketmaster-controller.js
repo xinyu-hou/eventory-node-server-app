@@ -3,6 +3,7 @@ import { config } from 'dotenv';
 config();
 
 const ticketmasterAPI = 'https://app.ticketmaster.com/discovery/v2/events.json?';
+const ticketmasterAPIBase = 'https://app.ticketmaster.com/discovery/v2/events/';
 const ticketmasterAPIKey = process.env.TICKETMASTER_API_KEY;
 
 const TicketmasterController = (app) => {
@@ -17,7 +18,6 @@ const findEventsInMA = async (req, res) => {
         size: req.query.size, // max size value is 200
         keyword: req.query.keyword, // optional keyword parameter
         city: req.query.city, // optional city parameter
-        postalCode: req.query.postalCode // optional postal code parameter
     };
     axios.get(ticketmasterAPI, {params})
         .then(response => {
@@ -28,11 +28,13 @@ const findEventsInMA = async (req, res) => {
                     "_id": event.id,
                     "name": event.name,
                     "linkToBuy": event.url,
+                    "description": event.info,
                     "date": event.dates.start.localDate,
                     "time": event.dates.start.localTime,
                     "segment": event.classifications[0].segment.name,
                     "genre": event.classifications[0].genre.name,
-                    "subgenre": event.classifications[0].subGenre.name,
+                    // TODO: subgenre does not work sometimes
+                    // "subgenre": event.classifications[0].subGenre.name,
                     "image": event.images[0],
                     "venueName": event._embedded.venues[0].name,
                     "venueCity": event._embedded.venues[0].city.name,
@@ -50,7 +52,35 @@ const findEventsInMA = async (req, res) => {
 };
 
 const getTicketmasterEventDetails = async (req, res) => {
-    // TODO: Get event details by event ID
+    const eventId = req.params.eventId;
+    const params = {
+        apikey: ticketmasterAPIKey,
+    };
+    const link = `${ticketmasterAPIBase}${eventId}`;
+    axios.get(link, {params})
+        .then(response => {
+            const event = response.data;
+            const eventDetails = {
+                "_id": event.id,
+                "name": event.name,
+                "description": event.info,
+                "date": event.dates.start.localDate,
+                "time": event.dates.start.localTime,
+                "segment": event.classifications[0].segment.name,
+                "genre": event.classifications[0].genre.name,
+                "subgenre": event.classifications[0].subGenre.name,
+                "image": event.images[0],
+                "venueName": event._embedded.venues[0].name,
+                "venueCity": event._embedded.venues[0].city.name,
+                "venuePostalCode": event._embedded.venues[0].postalCode,
+                "venueAddress": event._embedded.venues[0].address,
+            };
+            res.json(eventDetails);
+        })
+        .catch(error => {
+            console.log(error);
+            res.status(500).send('Error retrieving event details. Contact developers for help.');
+        });
 };
 
 export default TicketmasterController;

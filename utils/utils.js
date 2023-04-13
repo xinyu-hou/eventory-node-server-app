@@ -32,3 +32,20 @@ export const checkUserExistence = async (username) => {
         return existingAdmin;
     };
 };
+
+export const isCurrentUserAdmin = async (req, res, next) => {
+    const currentUser = req.session["currentUser"];
+    if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(401).json({ message: "Unauthorized." });
+    }
+    next();
+};
+
+export const isCurrentUserCurrentUser = async (req, res, next) => {
+    const currentUser = req.session["currentUser"];
+    const userId = req.params.userId;
+    if (!currentUser || currentUser._id !== userId) {
+        return res.status(401).json({ message: "Unauthorized." });
+    }
+    next();
+};

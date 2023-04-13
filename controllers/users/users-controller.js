@@ -3,13 +3,13 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import UsersModel from '../../models/users/users-model.js';
-import {checkUsernameExistence} from '../../utils/utils.js';
+import { checkUsernameExistence, isCurrentUserAdmin, isCurrentUserCurrentUser } from '../../utils/utils.js';
 
 const UsersController = (app) => {
-    app.get('/api/users', findAllUsers);
+    app.get('/api/users', isCurrentUserAdmin, findAllUsers); // Admin only action
     app.post('/api/users', createUser);
-    app.delete('/api/users/:userId', deleteUser);
-    app.put('/api/users/:userId', updateUser);
+    app.delete('/api/users/:userId', isCurrentUserAdmin, deleteUser); // Admin only action
+    app.put('/api/users/:userId', isCurrentUserCurrentUser, updateUser); // One user only action
     app.get('/api/users/verify/:token', verifyUser);
 };
 
@@ -17,7 +17,6 @@ const findAllUsers = async (req, res) => {
     const users = await UsersDao.findAllUsers();
     res.json(users);
 };
-
 const createUser = async (req, res) => {
     const { username, password } = req.body;
     try {
@@ -46,7 +45,6 @@ const createUser = async (req, res) => {
     }
 };
 const deleteUser = async (req, res) => {
-    // TODO: Only the user themselves and admins can perform delete a user action.
     const userId = req.params.userId;
     await UsersDao.deleteUser(userId)
         .then((status) => {
@@ -56,11 +54,16 @@ const deleteUser = async (req, res) => {
             console.log('Failed to delete user: ' + error.message)
             return res.status(400).json({ message: 'Failed to delete user.' });
         });
+    // TODO: When a user is deleted, should it be reflected in the events collection?
 };
 const updateUser = async (req, res) => {
     const userId = req.params.userId;
     const updates = req.body;
     const status = await UsersDao.updateUser(userId, updates);
+    // Fetch the updated user information from the database
+    const updatedUser = await UsersDao.findUserById(userId);
+    // Store the updated user information in the req.session['currentUser'] variable
+    req.session['currentUser'] = updatedUser;
     res.json(status);
 };
 const verifyUser = async (req, res) => {
@@ -99,42 +102,6 @@ const sendActivationEmail = async (username, activationToken) => {
         replyTo: 'noreply@eventoryma.com'
     };
     await transporter.sendMail(mailOptions);
-};
-const userLogin = async (req, res) => {
-    const { username, password } = req.body;
-    try {
-        // Check if username exists in the database
-        const existingUser = await UsersDao.findOneUser(username);
-        // When username does not exist in the database
-        if (!existingUser) {
-            const errorMessage = 'User with this username does not exist.';
-            return res.status(404).json({ message: errorMessage });
-        }
-        // When username exists in the database, check if password is correct.
-        const passwordMatch = await bcrypt.compare(password, existingUser.password);
-        // When passwords do not match
-        if (!passwordMatch) {
-            const errorMessage = 'Invalid password.';
-            return res.status(401).json({ message: errorMessage });
-        }
-        // When entered password is valid, check if user account is activated.
-        // If account is not activated, renew token and send activation email.
-        if (existingUser.activated === false) {
-            const activationMessage = 'User with this username exists but the account is not activated. An ' +
-                'account activation email has been sent. Please use the link in the email to activate your account.'
-            const activationToken = crypto.randomBytes(64).toString('hex');
-            const updates = { activationToken: activationToken };
-            await UsersDao.updateUserByUsername(username, updates);
-            await sendActivationEmail(username, activationToken);
-            return res.status(403).json({ message: activationMessage });
-        }
-        // If account is activated, display welcome message.
-        const welcomeMessage = 'Welcome ' + existingUser.firstName;
-        return res.status(201).json({ message: welcomeMessage });
-    } catch (error) {
-        console.error('Failed to login user: ', error.message);
-        return res.status(500).json({ message: 'Server error.'});
-    }
 };
 
 export default UsersController;
