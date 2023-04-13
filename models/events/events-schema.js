@@ -10,8 +10,7 @@ const EventsSchema = new mongoose.Schema({
     description: { type: String, required: true },
     image: String,
     organizer: { type: mongoose.Schema.Types.ObjectId, ref: 'OrganizersModel' },
-    interestedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'UsersModel' }],
-    registeredUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'UsersModel' }]
+    interestedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'UsersModel' }]
 }, {collection: 'events'});
 
 export default EventsSchema;

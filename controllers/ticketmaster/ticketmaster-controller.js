@@ -7,14 +7,17 @@ const ticketmasterAPIKey = process.env.TICKETMASTER_API_KEY;
 
 const TicketmasterController = (app) => {
     app.get('/api/ticketmaster/events', findEventsInMA);
+    app.get('/api/ticketmaster/events/:eventId', getTicketmasterEventDetails);
 };
 
-const findEventsInMA = (req, res) => {
+const findEventsInMA = async (req, res) => {
     const params = {
         apikey: ticketmasterAPIKey,
         stateCode: 'MA',
-        size: req.query.size // max size value is 200
-        // TODO: Can add more params here to customize the search.
+        size: req.query.size, // max size value is 200
+        keyword: req.query.keyword, // optional keyword parameter
+        city: req.query.city, // optional city parameter
+        postalCode: req.query.postalCode // optional postal code parameter
     };
     axios.get(ticketmasterAPI, {params})
         .then(response => {
@@ -44,6 +47,10 @@ const findEventsInMA = (req, res) => {
             console.log(error);
             res.status(500).send('Error retrieving events. Contact developers for help.');
         });
-}
+};
+
+const getTicketmasterEventDetails = async (req, res) => {
+    // TODO: Get event details by event ID
+};
 
 export default TicketmasterController;

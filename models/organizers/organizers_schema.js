@@ -8,7 +8,7 @@ const OrganizersSchema = new mongoose.Schema({
     activationToken: String,
     name: { type: String, required: true },
     profilePicture: Buffer,
-    description: String,
+    bio: String,
     events: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EventsModel' }]
 }, {collection: 'organizers'});
 

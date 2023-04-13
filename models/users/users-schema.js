@@ -12,8 +12,8 @@ const UsersSchema = new mongoose.Schema({
     profilePicture: Buffer,
     dateOfBirth: Date,
     location: String,
-    likedEvents: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EventsModel' }],
-    registeredEvents: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EventsModel' }]
+    bio: String,
+    likedEvents: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EventsModel' }]
 }, {collection: 'users'});
 
 export default UsersSchema;
