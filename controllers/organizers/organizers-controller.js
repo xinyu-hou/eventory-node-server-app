@@ -64,7 +64,12 @@ const createOrganizer = async (req, res) => {
             activationToken
         });
         // Insert organizer into database.
-        const insertedOrganizer = await OrganizersDao.createOrganizer(newOrganizer);
+        try {
+            await OrganizersDao.createOrganizer(newOrganizer);
+        } catch (error) {
+            const errorMessage = 'Failed to register organizer: ' + error.message;
+            return res.status(400).json({ message: errorMessage });
+        };
         // Send an account activation email to organizer.
         await sendActivationEmailByRole(username, activationToken, 'organizers');
         return res.status(201).json({ message: 'Please check your email and activate your account.' });

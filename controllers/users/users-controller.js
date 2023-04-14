@@ -65,7 +65,12 @@ const createUser = async (req, res) => {
             activationToken
         });
         // Insert user into database.
-        const insertedUser = await UsersDao.createUser(newUser);
+        try {
+            await UsersDao.createUser(newUser);
+        } catch (error) {
+            const errorMessage = 'Failed to register user: ' + error.message;
+            return res.status(400).json({ message: errorMessage });
+        };
         // Send an account activation email to user.
         await sendActivationEmailByRole(username, activationToken, 'users');
         return res.status(201).json({ message: 'Please check your email and activate your account.' });
@@ -81,7 +86,7 @@ const deleteUser = async (req, res) => {
     };
     await UsersDao.deleteUser(userId)
         .then((status) => {
-            return res.status(204).json(status); // No Content Status Code
+            return res.status(204).json({ message: 'User deleted.' }); // No Content Status Code
         })
         .catch ((error) => {
             console.log('Failed to delete user: ' + error.message)
