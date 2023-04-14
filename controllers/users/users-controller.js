@@ -7,6 +7,7 @@ import { checkUsernameExistence, isCurrentUserAdmin, isCurrentUserCurrentUser } 
 
 const UsersController = (app) => {
     app.get('/api/users', isCurrentUserAdmin, findAllUsers); // Admin only action
+    app.get('/api/users/:userId', findUserById);
     app.post('/api/users', createUser);
     app.delete('/api/users/:userId', isCurrentUserAdmin, deleteUser); // Admin only action
     app.put('/api/users/:userId', isCurrentUserCurrentUser, updateUser); // One user only action
@@ -17,6 +18,19 @@ const findAllUsers = async (req, res) => {
     const users = await UsersDao.findAllUsers();
     res.json(users);
 };
+const findUserById = async (req, res) => {
+    const userId = req.params.userId;
+    const user = await UsersDao.findUserById(userId);
+    // Only return non-sensitve info such as firstName, lastName, bio, profilePicture, likedEvents(?)
+    const limitedInfoUser = {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        bio: user.bio,
+        profilePicture: user.profilePicture,
+        likedEvents: user.likedEvents
+    };
+    res.json(limitedInfoUser);
+}
 const createUser = async (req, res) => {
     const { username, password } = req.body;
     try {

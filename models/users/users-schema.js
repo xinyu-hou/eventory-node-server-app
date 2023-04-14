@@ -8,7 +8,6 @@ const UsersSchema = new mongoose.Schema({
     activationToken: String,
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
-    displayName: String,
     profilePicture: Buffer,
     dateOfBirth: Date,
     location: String,

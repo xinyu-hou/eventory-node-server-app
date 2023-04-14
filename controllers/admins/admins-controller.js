@@ -5,12 +5,21 @@ import AdminsModel from "../../models/admins/admins-model.js";
 
 const AdminsController = (app) => {
     app.get('/api/admins', getAllAdmins);
-    app.post('/api/admins', createAdmin);
+    // app.post('/api/admins', createAdmin);
 }
 
 const getAllAdmins = async (req, res) => {
-    const users = await AdminsDao.findAllAdmins();
-    res.json(users);
+    const admins = await AdminsDao.findAllAdmins();
+    const limitedInfoAdmins = [];
+    admins.map(admin => {
+        let limitedInfoAdmin = {
+            username: admin.username,
+            firstName: admin.firstName,
+            lastName: admin.lastName
+        };
+        limitedInfoAdmins.push(limitedInfoAdmin);
+    });
+    res.json(limitedInfoAdmins);
 };
 const createAdmin = async (req, res) => {
     const { username, password } = req.body;
