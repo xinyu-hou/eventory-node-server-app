@@ -2,9 +2,12 @@ import * as OrganizersDao from "../../models/organizers/organizers_dao.js";
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
+import {isCurrentUserAdmin} from "../../utils/utils.js";
+import mongoose from "mongoose";
 
 const OrganizersController = (app) => {
-    app.get('/api/organizers', findAllOrganizers);
+    app.get('/api/organizers', isCurrentUserAdmin, findAllOrganizers); // Admin only action
+    app.get('/api/organizers/:organizerId', findOrganizerById);
     app.post('/api/organizers', createOrganizer);
     app.delete('/api/organizers/:organizerId', deleteOrganizer);
     app.put('/api/organizers/:organizerId', updateOrganizer);
@@ -14,6 +17,29 @@ const OrganizersController = (app) => {
 const findAllOrganizers = async (req, res) => {
     const organizers = await OrganizersDao.findAllOrganizers();
     res.json(organizers);
+};
+const findOrganizerById = async (req, res) => {
+    try {
+        const organizerId = req.params.organizerId;
+        if (!mongoose.Types.ObjectId.isValid(organizerId)) {
+            return res.status(404).json({message: 'Organizer not found.'});
+        }
+        const organizer = await OrganizersDao.findOrganizerById(organizerId);
+        if (!organizer) {
+            return res.status(404).json({ message: 'Organizer not found.'});
+        };
+        // Only return non-sensitive info such as name, profilePicture, bio, and username(?)
+        const limitedInfoOrganizer = {
+            name: organizer.name,
+            bio: organizer.bio,
+            profilePicture: organizer.profilePicture,
+            username: organizer.username
+        };
+        res.json(limitedInfoOrganizer);
+    } catch (error) {
+        console.error('Failed to find organizer: ', error.message);
+        return res.status(500).json({ message: 'Server error.' });
+    };
 };
 const createOrganizer = async (req, res) => {
     // const { username, password } = req.body;

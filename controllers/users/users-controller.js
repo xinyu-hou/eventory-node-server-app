@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import UsersModel from '../../models/users/users-model.js';
 import { checkUsernameExistence, isCurrentUserAdmin, isCurrentUserCurrentUser } from '../../utils/utils.js';
+import mongoose from "mongoose";
 
 const UsersController = (app) => {
     app.get('/api/users', isCurrentUserAdmin, findAllUsers); // Admin only action
@@ -19,18 +20,29 @@ const findAllUsers = async (req, res) => {
     res.json(users);
 };
 const findUserById = async (req, res) => {
-    const userId = req.params.userId;
-    const user = await UsersDao.findUserById(userId);
-    // Only return non-sensitve info such as firstName, lastName, bio, profilePicture, likedEvents(?)
-    const limitedInfoUser = {
-        firstName: user.firstName,
-        lastName: user.lastName,
-        bio: user.bio,
-        profilePicture: user.profilePicture,
-        likedEvents: user.likedEvents
+    try {
+        const userId = req.params.userId;
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(404).json({message: 'User not found.'});
+        }
+        const user = await UsersDao.findUserById(userId);
+        if (!user) {
+            return res.status(404).json({message: 'User not found.'});
+        }
+        // Only return non-sensitve info such as firstName, lastName, bio, profilePicture, likedEvents(?)
+        const limitedInfoUser = {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            bio: user.bio,
+            profilePicture: user.profilePicture,
+            likedEvents: user.likedEvents
+        };
+        res.json(limitedInfoUser);
+    } catch (error) {
+        console.error('Failed to find user: ', error.message);
+        return res.status(500).json({ message: 'Server error.' });
     };
-    res.json(limitedInfoUser);
-}
+};
 const createUser = async (req, res) => {
     const { username, password } = req.body;
     try {
@@ -60,6 +72,9 @@ const createUser = async (req, res) => {
 };
 const deleteUser = async (req, res) => {
     const userId = req.params.userId;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        return res.status(404).json({message: 'User not found.'});
+    };
     await UsersDao.deleteUser(userId)
         .then((status) => {
             return res.status(201).json(status);
@@ -72,6 +87,9 @@ const deleteUser = async (req, res) => {
 };
 const updateUser = async (req, res) => {
     const userId = req.params.userId;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        return res.status(404).json({message: 'User not found.'});
+    };
     const updates = req.body;
     const status = await UsersDao.updateUser(userId, updates);
     // Fetch the updated user information from the database

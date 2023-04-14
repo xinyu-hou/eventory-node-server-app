@@ -14,7 +14,7 @@ const everybodyLogin = async (req, res) => {
         const user = await checkUserExistence(username);
         if (!user) {
             const errorMessage = 'User with this username does not exist.';
-            return res.status(404).json({message: errorMessage});
+            return res.status(404).json({ message: errorMessage });
         };
         const userRole = user.role;
         const correctPassword = user.password;
