@@ -130,24 +130,5 @@ const verifyUser = async (req, res) => {
         return res.status(500).json({ message: 'Server error.'});
     };
 };
-// const sendActivationEmail = async (username, activationToken) => {
-//     const transporter = nodemailer.createTransport({
-//         host: process.env.SMTP_HOST,
-//         port: process.env.SMTP_PORT,
-//         secure: false,
-//         auth: {
-//             user: process.env.SMTP_USERNAME,
-//             pass: process.env.SMTP_PASSWORD,
-//         }
-//     });
-//     const mailOptions = {
-//         from: 'Eventory App <eventoryma@gmail.com>',
-//         to: username,
-//         subject: 'Activate you Eventory account',
-//         text: `Please click the following link to verify your email address: ${process.env.BASE_URL}/api/users/verify/${activationToken}`,
-//         replyTo: 'noreply@eventoryma.com'
-//     };
-//     await transporter.sendMail(mailOptions);
-// };
 
 export default UsersController;
