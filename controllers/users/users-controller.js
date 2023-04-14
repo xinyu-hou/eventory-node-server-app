@@ -1,9 +1,13 @@
 import * as UsersDao from '../../models/users/users-dao.js'
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import nodemailer from 'nodemailer';
 import UsersModel from '../../models/users/users-model.js';
-import { checkUsernameExistence, isCurrentUserAdmin, isCurrentUserCurrentUser } from '../../utils/utils.js';
+import {
+    checkUsernameExistence,
+    isCurrentUserAdmin,
+    isCurrentUserCurrentUser,
+    sendActivationEmailByRole
+} from '../../utils/utils.js';
 import mongoose from "mongoose";
 
 const UsersController = (app) => {
@@ -23,11 +27,11 @@ const findUserById = async (req, res) => {
     try {
         const userId = req.params.userId;
         if (!mongoose.Types.ObjectId.isValid(userId)) {
-            return res.status(404).json({message: 'User not found.'});
+            return res.status(404).json({ message: 'User not found.' });
         }
         const user = await UsersDao.findUserById(userId);
         if (!user) {
-            return res.status(404).json({message: 'User not found.'});
+            return res.status(404).json({ message: 'User not found.' });
         }
         // Only return non-sensitve info such as firstName, lastName, bio, profilePicture, likedEvents(?)
         const limitedInfoUser = {
@@ -63,7 +67,7 @@ const createUser = async (req, res) => {
         // Insert user into database.
         const insertedUser = await UsersDao.createUser(newUser);
         // Send an account activation email to user.
-        await sendActivationEmail(username, activationToken);
+        await sendActivationEmailByRole(username, activationToken, 'users');
         return res.status(201).json({ message: 'Please check your email and activate your account.' });
     } catch (error) {
         console.error('Failed to register user: ', error.message);
@@ -73,11 +77,11 @@ const createUser = async (req, res) => {
 const deleteUser = async (req, res) => {
     const userId = req.params.userId;
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-        return res.status(404).json({message: 'User not found.'});
+        return res.status(404).json({ message: 'User not found.' });
     };
     await UsersDao.deleteUser(userId)
         .then((status) => {
-            return res.status(201).json(status);
+            return res.status(204).json(status); // No Content Status Code
         })
         .catch ((error) => {
             console.log('Failed to delete user: ' + error.message)
@@ -86,54 +90,59 @@ const deleteUser = async (req, res) => {
     // TODO: When a user is deleted, should it be reflected in the events collection?
 };
 const updateUser = async (req, res) => {
-    const userId = req.params.userId;
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-        return res.status(404).json({message: 'User not found.'});
+    try {
+        const userId = req.params.userId;
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(404).json({ message: 'User not found.' });
+        };
+        const updates = req.body;
+        const status = await UsersDao.updateUser(userId, updates);
+        // Fetch the updated user information from the database
+        const updatedUser = await UsersDao.findUserById(userId);
+        // Store the updated user information in the req.session['currentUser'] variable
+        req.session['currentUser'] = updatedUser;
+        res.json(status);
+    } catch (error) {
+        console.error('Failed to update user: ', error.message);
+        return res.status(500).json({ message: 'Server error.' });
     };
-    const updates = req.body;
-    const status = await UsersDao.updateUser(userId, updates);
-    // Fetch the updated user information from the database
-    const updatedUser = await UsersDao.findUserById(userId);
-    // Store the updated user information in the req.session['currentUser'] variable
-    req.session['currentUser'] = updatedUser;
-    res.json(status);
 };
 const verifyUser = async (req, res) => {
-    const token = req.params.token;
     try {
+        const token = req.params.token;
         // Find the user with the activation token.
         const user = await UsersDao.findOneToken(token);
-        // If no user found, token is invalid
+        // If no user found, token is invalid.
         if (!user) {
             return res.status(400).json({ message: 'Invalid verification token' });
         };
         // If a user is found, set the activation attribute to true.
         const updates = { activated: true };
-        const status = await UsersDao.updateUser(user._id, updates);
-        return res.status(201).json({ message: 'Your Eventory account has been activated.' });
+        await UsersDao.updateUser(user._id, updates);
+        return res.status(200).json({ message: 'Your Eventory account has been activated.' });
     } catch (error) {
         console.error('Failed to verify user: ', error.message);
         return res.status(500).json({ message: 'Server error.'});
-    }
-};
-const sendActivationEmail = async (username, activationToken) => {
-    const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
-        secure: false,
-        auth: {
-            user: process.env.SMTP_USERNAME,
-            pass: process.env.SMTP_PASSWORD,
-        }
-    });
-    const mailOptions = {
-        from: 'Eventory App <eventoryma@gmail.com>',
-        to: username,
-        subject: 'Activate you Eventory account',
-        text: `Please click the following link to verify your email address: ${process.env.BASE_URL}/api/users/verify/${activationToken}`,
-        replyTo: 'noreply@eventoryma.com'
     };
-    await transporter.sendMail(mailOptions);
 };
+// const sendActivationEmail = async (username, activationToken) => {
+//     const transporter = nodemailer.createTransport({
+//         host: process.env.SMTP_HOST,
+//         port: process.env.SMTP_PORT,
+//         secure: false,
+//         auth: {
+//             user: process.env.SMTP_USERNAME,
+//             pass: process.env.SMTP_PASSWORD,
+//         }
+//     });
+//     const mailOptions = {
+//         from: 'Eventory App <eventoryma@gmail.com>',
+//         to: username,
+//         subject: 'Activate you Eventory account',
+//         text: `Please click the following link to verify your email address: ${process.env.BASE_URL}/api/users/verify/${activationToken}`,
+//         replyTo: 'noreply@eventoryma.com'
+//     };
+//     await transporter.sendMail(mailOptions);
+// };
 
 export default UsersController;
