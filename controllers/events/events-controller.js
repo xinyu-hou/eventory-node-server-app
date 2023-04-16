@@ -1,5 +1,10 @@
 import * as EventsDao from '../../models/events/events-dao.js';
-import {checkEventIdExists, isCurrentUserCurrentOrganizer, isCurrentUserOrganizer} from "../../utils/utils.js";
+import {
+    checkEventIdExists,
+    isCurrentUserCurrentOrganizer,
+    isCurrentUserEventOrganizer,
+    isCurrentUserOrganizer
+} from "../../utils/utils.js";
 import mongoose from "mongoose";
 import EventsModel from "../../models/events/events-model.js";
 import * as OrganizersDao from "../../models/organizers/organizers_dao.js";
@@ -12,8 +17,8 @@ const EventsController = (app) => {
     app.get('/api/eventory/events/city/:city/keyword/:keyword', findEvents);
     app.get('/api/eventory/events/:eventId', checkEventIdExists, findEventById);
     app.post('/api/eventory/events', isCurrentUserOrganizer, createEvent); // Organizer only action
-    app.delete('/api/eventory/events/:eventId', checkEventIdExists, isCurrentUserCurrentOrganizer, deleteEvent); // One organizer only action
-    app.put('/api/eventory/events/:eventId', checkEventIdExists, isCurrentUserCurrentOrganizer, updateEvent); // One organizer only action
+    app.delete('/api/eventory/events/:eventId', checkEventIdExists, isCurrentUserEventOrganizer, deleteEvent); // One organizer only action
+    app.put('/api/eventory/events/:eventId', checkEventIdExists, isCurrentUserEventOrganizer, updateEvent); // One organizer only action
 };
 
 const findEvents = async (req, res) => {
@@ -57,7 +62,7 @@ const findAllEvents = async (res) => {
 const findEventById = async (req, res) => {
     try {
         const eventId = req.params.eventId;
-        const event = await EventsDao.findOneEvent(eventId);
+        const event = await EventsDao.findEventById(eventId);
         const eventTime = event.getDateTimeInTimeZone('America/New York');
         console.log("Event time: " + eventTime);
         res.json(event);
@@ -90,7 +95,7 @@ const createEvent = async (req, res) => {
                 const updatedOrganizer = await OrganizersDao.findOrganizerById(organizerId);
                 req.session["currentUser"] = updatedOrganizer;
                 const successMessage = `Event ${createdEvent._id} created.`;
-                res.status(201).json({ message: successMessage });
+                return res.status(201).json({ message: successMessage });
             } catch (error) {
                 console.error('Failed to create event: ', error.message);
                 return res.status(400).json({ message: 'Failed to create event.' });
@@ -116,12 +121,13 @@ const deleteEvent = async (req, res) => {
                 console.log("deleteStatus");
                 console.log(deleteStatus);
                 const updateOrganizerStatus = await OrganizersDao.pullEventOrganizer(organizerId, eventId);
+                req.session["currentUser"] = await OrganizersDao.findOrganizerById(organizerId);
                 console.log("updateOrganizerStatus");
                 console.log(updateOrganizerStatus);
                 const updateUsersStatus = await UsersDao.pullEventUsers(eventId);
                 console.log("updateUsersStatus");
                 console.log(updateUsersStatus);
-                res.status(204);
+                return res.sendStatus(204);
             } catch (error) {
                 console.error('Failed to delete event: ', error.message);
                 return res.status(400).json({ message: 'Failed to delete event.' });

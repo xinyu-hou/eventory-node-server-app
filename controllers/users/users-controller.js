@@ -77,7 +77,7 @@ const deleteUser = async (req, res) => {
     const userId = req.params.userId;
     await UsersDao.deleteUser(userId)
         .then((status) => {
-            return res.status(204).json({ message: 'User deleted.' }); // No Content Status Code
+            return res.sendStatus(204); // No Content Status Code
         })
         .catch ((error) => {
             console.log('Failed to delete user: ' + error.message)

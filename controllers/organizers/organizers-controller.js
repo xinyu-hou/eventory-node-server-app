@@ -76,7 +76,7 @@ const deleteOrganizer = async (req, res) => {
     const organizerId = req.params.organizerId;
     await OrganizersDao.deleteOrganizer(organizerId)
         .then((status) => {
-            res.status(204).json(status); // No Content Status Code
+            return res.sendStatus(204); // No Content Status Code
         })
         .catch((error) => {
            console.log('Failed to delete organizer: ' + error.message);

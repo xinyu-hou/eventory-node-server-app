@@ -70,6 +70,17 @@ export const isCurrentUserCurrentOrganizer = async (req, res, next) => {
     next();
 };
 
+export const isCurrentUserEventOrganizer = async (req, res, next) => {
+    const currentUser = req.session["currentUser"];
+    const eventId = req.params.eventId;
+    const event = await EventsDao.findEventById(eventId);
+    const eventOrganizerId = event.organizer; // of type object
+    if (!currentUser || currentUser._id != eventOrganizerId) {
+        return res.status(401).json({ message: "Unauthorized." });
+    }
+    next();
+};
+
 export const checkUserIdExists = async (req, res, next) => {
     const userId = req.params.userId;
     if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -95,29 +106,15 @@ export const checkOrganizerIdExists = async (req, res, next) => {
 };
 
 export const checkEventIdExists = async (req, res, next) => {
-    const eventId = req.params.eventid;
-    if (!mongoose.Types.ObjectId.isValid(eventId)) {
-        return res.status(404).json({ message: 'Event not found.' });
-    }
-    const event = await EventsDao.findOneEvent(eventId);
-    if (!event) {
-        return res.status(404).json({ message: 'Event not found.'});
-    }
-    next();
-};
-
-export const isCurrentUserEventOrganizer = async (req, res, next) => {
-    const currentUser = req.session["currentUser"];
     const eventId = req.params.eventId;
     if (!mongoose.Types.ObjectId.isValid(eventId)) {
         return res.status(404).json({ message: 'Event not found.' });
     }
-    const event = await EventsDao.findOneEvent(eventId);
+    const event = await EventsDao.findEventById(eventId);
     if (!event) {
-        return res.status(404).json({ message: 'Event not found.' });
+        return res.status(404).json({ message: 'Event not found.'});
     }
-    // TODO
-    // try {}
+    next();
 };
 
 export const sendActivationEmailByRole = async (username, activationToken, role) => {
