@@ -44,6 +44,7 @@
     "mime": "^1.6.0",
     "mime-db": "^1.52.0",
     "mime-types": "^2.1.35",
+    "moment-timezone": "^0.5.43",
     "mongodb": "^5.2.0",
     "mongoose": "^7.0.3",
     "ms": "^2.0.0",

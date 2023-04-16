@@ -15,7 +15,7 @@ const everybodyLogin = async (req, res) => {
         if (!user) {
             const errorMessage = 'User with this username does not exist.';
             return res.status(404).json({ message: errorMessage });
-        };
+        }
         const userRole = user.role;
         const correctPassword = user.password;
         const userFirstName = user.firstName;
@@ -36,7 +36,7 @@ const everybodyLogin = async (req, res) => {
         if (!activated) {
             const errorMessage = 'Account is not activated.';
             return res.status(403).json({ message: errorMessage });
-        };
+        }
         // // If account is activated, display welcome message.
         const welcomeMessage = 'Welcome ' + userRole + ' ' + userFirstName;
         req.session["currentUser"] = user;
@@ -44,7 +44,7 @@ const everybodyLogin = async (req, res) => {
     } catch (error) {
         console.error('Login failed: ', error.message);
         return res.status(500).json({ message: 'Server error.' });
-    };
+    }
 };
 const everybodyLogout = async (req, res) => {
     req.session.destroy();

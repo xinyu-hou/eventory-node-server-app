@@ -8,3 +8,4 @@ export const createUser = (user) => UsersModel.create(user);
 export const deleteUser = (userId) => UsersModel.deleteOne({_id: userId});
 export const updateUser = (userId, user) => UsersModel.updateOne({_id: userId}, {$set: user});
 export const updateUserByUsername = (username, user) => UsersModel.updateOne({username: username}, {$set: user});
+export const pullEventUsers = (eventId) => UsersModel.updateMany({likedEvents: eventId}, {$pull: {likedEvents: eventId}});

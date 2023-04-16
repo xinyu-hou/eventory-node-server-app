@@ -7,3 +7,5 @@ export const findOneToken = (token) => OrganizersModel.findOne({activationToken:
 export const createOrganizer = (organizer) => OrganizersModel.create(organizer);
 export const deleteOrganizer = (organizerId) => OrganizersModel.deleteOne({_id: organizerId});
 export const updateOrganizer = (organizerId, organizer) => OrganizersModel.updateOne({_id: organizerId}, {$set: organizer});
+export const pushEventOrganizer = (organizerId, eventId) => OrganizersModel.updateOne({_id: organizerId}, {$push: {events: eventId}});
+export const pullEventOrganizer = (organizerId, eventId) => OrganizersModel.updateOne({_id: organizerId}, {$pull: {events: eventId}});
