@@ -4,11 +4,17 @@ import crypto from 'crypto';
 import UsersModel from '../../models/users/users-model.js';
 import {
     checkUserIdExists,
+    checkEventIdExists,
+    checkTicketmasterEventIdExists,
     checkUsernameExistence,
     isCurrentUserAdmin,
+    isCurrentUserUser,
     isCurrentUserCurrentUser,
     sendActivationEmailByRole
 } from '../../utils/utils.js';
+import mongoose from "mongoose";
+import * as EventsDao from "../../models/events/events-dao.js";
+import {pushTicketmasterEventOneUser} from "../../models/users/users-dao.js";
 
 const UsersController = (app) => {
     app.get('/api/users', isCurrentUserAdmin, findAllUsers); // Admin only action
@@ -16,6 +22,8 @@ const UsersController = (app) => {
     app.post('/api/users', createUser);
     app.delete('/api/users/:userId', checkUserIdExists, isCurrentUserAdmin, deleteUser); // Admin only action
     app.put('/api/users/:userId', checkUserIdExists, isCurrentUserCurrentUser, updateUser); // One user only action
+    app.put('/api/users/eventory/:eventId', checkEventIdExists, isCurrentUserUser, likeOrDislikeEventoryEvent); // User only action
+    app.put('/api/users/ticketmaster/:eventId', checkTicketmasterEventIdExists, isCurrentUserUser, likeOrDislikeTicketmasterEvent); // User only action
     app.get('/api/users/verify/:token', verifyUser);
 };
 
@@ -98,6 +106,118 @@ const updateUser = async (req, res) => {
     } catch (error) {
         console.error('Failed to update user: ', error.message);
         return res.status(500).json({ message: 'Server error.' });
+    }
+};
+const likeOrDislikeEventoryEvent = async (req, res) => {
+    const session = await mongoose.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const currentUser = req.session["currentUser"];
+            const userId = currentUser._id;
+            // Retrieve eventId from req parameters
+            const eventId = req.params.eventId;
+            const action = req.body.action;
+            switch (action) {
+                case 'like':
+                    await likeEventoryEvent(req, res, userId, eventId);
+                    break;
+                case 'dislike':
+                    await dislikeEventoryEvent(req, res, userId, eventId);
+                    break;
+                default:
+                    return res.status(400).json({ message: 'Invalid action' });
+            }
+        });
+    } catch (error) {
+        console.error('Failed to like/dislike Eventory event: ', error.message);
+        return res.status(500).json({ message: 'Server error.' });
+    } finally {
+        await session.endSession();
+    }
+};
+const likeEventoryEvent = async (req, res, userId, eventId) => {
+    try {
+        const updatedUserStatus = await UsersDao.pushEventoryEventOneUser(userId, eventId);
+        console.log("updatedUserStatus");
+        console.log(updatedUserStatus);
+        const updatedEventStatus = await EventsDao.pushInterestedUserOneEvent(eventId, userId);
+        console.log("updatedEventStatus");
+        console.log(updatedEventStatus);
+        const updatedUser = await UsersDao.findUserById(userId);
+        req.session["currentUser"] = updatedUser;
+        res.json(updatedUserStatus);
+    } catch (error) {
+        console.error('Failed to like Eventory event: ', error.message);
+        return res.status(400).json({ message: 'Failed to like Eventory event.' });
+    }
+};
+const dislikeEventoryEvent = async (req, res, userId, eventId) => {
+    try {
+        const updatedUserStatus = await UsersDao.pullEventoryEventOneUser(userId, eventId);
+        console.log("updatedUserStatus");
+        console.log(updatedUserStatus);
+        const updatedEventStatus = await EventsDao.pullInterestedUserOneEvent(eventId, userId);
+        console.log("updatedEventStatus");
+        console.log(updatedEventStatus);
+        const updatedUser = await UsersDao.findUserById(userId);
+        req.session["currentUser"] = updatedUser;
+        res.json(updatedUserStatus);
+    } catch (error) {
+        console.error('Failed to dislike Eventory event: ', error.message);
+        return res.status(400).json({ message: 'Failed to dislike Eventory event.' });
+    }
+};
+const likeOrDislikeTicketmasterEvent = async (req, res) => {
+    const session = await mongoose.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const currentUser = req.session["currentUser"];
+            const userId = currentUser._id;
+            // Retrieve eventId from req parameters
+            const eventId = req.params.eventId;
+            const action = req.body.action;
+            switch (action) {
+                case 'like':
+                    await likeTicketmasterEvent(req, res, userId, eventId);
+                    break;
+                case 'dislike':
+                    await dislikeTicketmasterEvent(req, res, userId, eventId);
+                    break;
+                default:
+                    return res.status(400).json({ message: 'Invalid action' });
+            }
+        });
+    } catch (error) {
+        console.error('Failed to like/dislike Ticketmaster event: ', error.message);
+        return res.status(500).json({ message: 'Server error.' });
+    } finally {
+        await session.endSession();
+    }
+};
+const likeTicketmasterEvent = async (req, res, userId, eventId) => {
+    try {
+        const updatedUserStatus = await UsersDao.pushTicketmasterEventOneUser(userId, eventId);
+        console.log("updatedUserStatus");
+        console.log(updatedUserStatus);
+        const updatedUser = await UsersDao.findUserById(userId);
+        req.session["currentUser"] = updatedUser;
+        res.json(updatedUserStatus);
+    } catch (error) {
+        console.error('Failed to like Ticketmaster event: ', error.message);
+        return res.status(400).json({ message: 'Failed to like Ticketmaster event.' });
+    }
+};
+const dislikeTicketmasterEvent = async (req, res, userId, eventId) => {
+    try {
+        const updatedUserStatus = await UsersDao.pullTicketmasterEventOneUser(userId, eventId);
+        console.log("updatedUserStatus");
+        console.log(updatedUserStatus);
+        const updatedUser = await UsersDao.findUserById(userId);
+        req.session["currentUser"] = updatedUser;
+        res.json(updatedUserStatus);
+    } catch (error) {
+        console.error('Failed to dislike Ticketmaster event: ', error.message);
+        return res.status(400).json({ message: 'Failed to dislike Ticketmaster event.' });
     }
 };
 const verifyUser = async (req, res) => {

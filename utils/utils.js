@@ -4,6 +4,9 @@ import * as OrganizersDao from "../models/organizers/organizers_dao.js";
 import nodemailer from "nodemailer";
 import mongoose from "mongoose";
 import * as EventsDao from "../models/events/events-dao.js";
+import { config } from 'dotenv';
+import axios from "axios";
+config();
 
 export const checkUsernameExistence = async (username) => {
     const existingUser = await UsersDao.findOneUser(username);
@@ -39,6 +42,14 @@ export const checkUserExistence = async (username) => {
 export const isCurrentUserAdmin = async (req, res, next) => {
     const currentUser = req.session["currentUser"];
     if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(401).json({ message: "Unauthorized." });
+    }
+    next();
+};
+
+export const isCurrentUserUser = async (req, res, next) => {
+    const currentUser = req.session["currentUser"];
+    if (!currentUser || currentUser.role !== 'user') {
         return res.status(401).json({ message: "Unauthorized." });
     }
     next();
@@ -112,7 +123,24 @@ export const checkEventIdExists = async (req, res, next) => {
     }
     const event = await EventsDao.findEventById(eventId);
     if (!event) {
-        return res.status(404).json({ message: 'Event not found.'});
+        return res.status(404).json({ message: 'Event not found.' });
+    }
+    next();
+};
+
+export const checkTicketmasterEventIdExists = async (req, res, next) => {
+    // Check if the given eventId exists in Ticketmaster
+    const ticketmasterEventId = req.params.eventId;
+    const ticketmasterAPIKey = process.env.TICKETMASTER_API_KEY;
+    const ticketmasterAPIBase = 'https://app.ticketmaster.com/discovery/v2/events/';
+    const url = `${ticketmasterAPIBase}${ticketmasterEventId}.json?apikey=${ticketmasterAPIKey}`;
+    try {
+        await axios.get(url);
+    } catch (error) {
+        if (error. response && error.response.status === 404) {
+            return res.status(404).json({ message: 'Ticketmaster event not found.' });
+        }
+        return res.status(500).json({ message: 'Something went wrong.' });
     }
     next();
 };

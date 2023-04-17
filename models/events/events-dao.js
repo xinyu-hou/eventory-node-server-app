@@ -17,3 +17,7 @@ export const findEventById = (eventId) => EventsModel
 export const createEvent = (event) => EventsModel.create(event);
 export const deleteEvent = (eventId) => EventsModel.deleteOne({_id: eventId});
 export const updateEvent = (eventId, event) => EventsModel.updateOne({_id: eventId}, {$set: event});
+export const pushInterestedUserOneEvent = (eventId, userId) => EventsModel
+    .updateOne({_id: eventId}, {$addToSet: {interestedUsers: userId}});
+export const pullInterestedUserOneEvent = (eventId, userId) => EventsModel
+    .updateOne({_id: eventId}, {$pull: {interestedUsers: userId}});
