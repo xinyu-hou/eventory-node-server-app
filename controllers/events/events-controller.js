@@ -11,7 +11,7 @@ import * as OrganizersDao from "../../models/organizers/organizers_dao.js";
 import * as UsersDao from "../../models/users/users-dao.js";
 
 const EventsController = (app) => {
-    app.get('/api/eventory/events/', findEvents);
+    app.get('/api/eventory/events', findEvents);
     app.get('/api/eventory/events/city/:city', findEvents);
     app.get('/api/eventory/events/keyword/:keyword', findEvents);
     app.get('/api/eventory/events/city/:city/keyword/:keyword', findEvents);
@@ -26,7 +26,7 @@ const findEvents = async (req, res) => {
     if (city && keyword) {
         // handle findEventsByCityAndKeyword
         // query events with both city and keyword
-        // await findEventsByCityAndKeyword();
+        await findEventsByCityAndKeyword(city, keyword, res);
     } else if (city) {
         // handle findEventsByCity
         // query events with matching city
@@ -34,27 +34,44 @@ const findEvents = async (req, res) => {
     } else if (keyword) {
         // handle findEventsByKeyword
         // query events with matching keyword
-        // await findEventsByKeyword();
+        await findEventsByKeyword(keyword, res);
     } else {
         // handle findAllEvents
         // query all events
         await findAllEvents(res);
     };
 };
-// const findEventsByCityAndKeyword = async (req, res) => {
-//     const { city, keyword } = req.params;
-//     const events = await EventsDao.findEventsByCityAndKeyword(city, keyword);
-//     res.json(events);
-// };
-const findEventsByCity = async (city, res) => {
-    const events = await EventsDao.findEventsByCity(city);
-    res.json(events);
+const findEventsByCityAndKeyword = async (city, keyword, res) => {
+    try {
+        const cityRegex = new RegExp(city, 'i'); // 'i' flag for case-insensitivity
+        const keywordRegex = new RegExp(keyword, 'i');
+        const events = await EventsDao.findEventsByCityAndKeyword(cityRegex, keywordRegex);
+        res.json(events);
+    } catch (error) {
+        console.error('Failed to find events by city and keyword: ', error.message);
+        return res.status(500).json({ message: 'Server error.' });
+    }
 };
-// const findEventsByKeyword = async (req, res) => {
-//     const keyword = req.params.keyword;
-//     const events = await EventsDao.findEventsByKeyword(keyword);
-//     res.json(events);
-// };
+const findEventsByCity = async (city, res) => {
+    try {
+        const cityRegex = new RegExp(city, 'i'); // 'i' flag for case-insensitivity
+        const events = await EventsDao.findEventsByCity(cityRegex);
+        res.json(events);
+    } catch (error) {
+        console.error('Failed to find events by city: ', error.message);
+        return res.status(500).json({ message: 'Server error.' });
+    }
+};
+const findEventsByKeyword = async (keyword, res) => {
+    try {
+        const keywordRegex = new RegExp(keyword, 'i');
+        const events = await EventsDao.findEventsByKeyword(keywordRegex);
+        res.json(events);
+    } catch (error) {
+        console.error('Failed to find events by keyword: ', error.message);
+        return res.status(500).json({ message: 'Server error.' });
+    }
+};
 const findAllEvents = async (res) => {
     const events = await EventsDao.findAllEvents();
     res.json(events);
