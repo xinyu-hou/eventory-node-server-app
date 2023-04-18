@@ -9,6 +9,8 @@ export const deleteUser = (userId) => UsersModel.deleteOne({_id: userId});
 export const updateUser = (userId, user) => UsersModel.updateOne({_id: userId}, {$set: user});
 export const pullEventUsers = (eventId) => UsersModel
     .updateMany({likedEvents: eventId}, {$pull: {likedEvents: eventId}});
+export const pullEventsUsers = (eventIds) => UsersModel
+    .updateMany({likedEvents: {$in: eventIds}}, {$pull: {likedEvents: {$in: eventIds}}});
 export const pushEventoryEventOneUser = (userId, eventId) => UsersModel
     .updateOne({_id: userId}, {$addToSet: {likedEvents: eventId}});
 export const pullEventoryEventOneUser = (userId, eventId) => UsersModel

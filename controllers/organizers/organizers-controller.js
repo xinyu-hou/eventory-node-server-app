@@ -13,6 +13,8 @@ import OrganizersModel from "../../models/organizers/organizers_model.js";
 import mongoose from "mongoose";
 import * as EventsDao from "../../models/events/events-dao.js";
 import {findOrganizerByIdPopulateEvents} from "../../models/organizers/organizers_dao.js";
+import {pullEventsUsers} from "../../models/users/users-dao.js";
+import * as UsersDao from "../../models/users/users-dao.js";
 
 const OrganizersController = (app) => {
     app.get('/api/organizers', isCurrentUserAdmin, findAllOrganizers); // Admin only action
@@ -84,16 +86,22 @@ const deleteOrganizer = async (req, res) => {
         await session.withTransaction(async () => {
             const organizerId = req.params.organizerId;
             try {
-                // (1) Delete organizer from Organizers table
-                const deleteStatus = await OrganizersDao.deleteOrganizer(organizerId);
-                console.log("deleteStatus");
-                console.log(deleteStatus);
-                // (2) Delete event(s) that have organizer as organizer in Events table
-                // (3) Remove event(s) from likedEvents in Users table
-                // TODO
-                // const updateStatus = await EventsDao.pullInterestedUserEvents(userId);
-                // console.log("updateStatus");
-                // console.log(updateStatus);
+                // (1) Find event(s) that have organizer as organizer in Events table
+                const eventIds = await EventsDao.findEventIdsByOrganizerId(organizerId);
+                console.log("eventIds");
+                console.log(eventIds);
+                // (2) Use map to remove event(s) from likedEvents in Users table
+                const updateUsersStatus = await UsersDao.pullEventsUsers(eventIds);
+                console.log("updateUsersStatus");
+                console.log(updateUsersStatus);
+                // (3) Delete event(s) that have organizer as organizer in Events table
+                const deleteEventsStatus = await EventsDao.deleteEventsByOrganizerId(organizerId);
+                console.log("deleteEventsStatus");
+                console.log(deleteEventsStatus);
+                // (4) Delete organizer from Organizers table
+                const deleteOrganizerStatus = await OrganizersDao.deleteOrganizer(organizerId);
+                console.log("deleteOrganizerStatus");
+                console.log(deleteOrganizerStatus);
                 return res.sendStatus(204);
             } catch (error) {
                 console.error('Failed to delete organizer: ', error.message);
