@@ -138,7 +138,8 @@ const deleteEvent = async (req, res) => {
                 console.log("deleteStatus");
                 console.log(deleteStatus);
                 const updateOrganizerStatus = await OrganizersDao.pullEventOrganizer(organizerId, eventId);
-                req.session["currentUser"] = await OrganizersDao.findOrganizerById(organizerId);
+                const updatedOrganizer = await OrganizersDao.findOrganizerById(organizerId);
+                req.session["currentUser"] = updatedOrganizer;
                 console.log("updateOrganizerStatus");
                 console.log(updateOrganizerStatus);
                 const updateUsersStatus = await UsersDao.pullEventUsers(eventId);

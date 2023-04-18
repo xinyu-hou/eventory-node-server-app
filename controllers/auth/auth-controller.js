@@ -37,8 +37,6 @@ const everybodyLogin = async (req, res) => {
             const errorMessage = 'Account is not activated.';
             return res.status(403).json({ message: errorMessage });
         }
-        // // If account is activated, display welcome message.
-        const welcomeMessage = 'Welcome ' + userRole + ' ' + userFirstName;
         req.session["currentUser"] = user;
         return res.status(200).json(user);
     } catch (error) {

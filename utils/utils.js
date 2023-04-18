@@ -85,7 +85,7 @@ export const isCurrentUserEventOrganizer = async (req, res, next) => {
     const currentUser = req.session["currentUser"];
     const eventId = req.params.eventId;
     const event = await EventsDao.findEventById(eventId);
-    const eventOrganizerId = event.organizer; // of type object
+    const eventOrganizerId = event.organizer._id.toString();
     if (!currentUser || currentUser._id != eventOrganizerId) {
         return res.status(401).json({ message: "Unauthorized." });
     }
