@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { config } from 'dotenv';
-import {findInterestedUsersByTicketmasterEventId} from "../../models/users/users-dao.js";
+import {checkTicketmasterEventIdExists} from "../../utils/utils.js";
+import * as UsersDao from "../../models/users/users-dao.js";
 config();
 
 const ticketmasterAPI = 'https://app.ticketmaster.com/discovery/v2/events.json?';
@@ -8,12 +9,11 @@ const ticketmasterAPIBase = 'https://app.ticketmaster.com/discovery/v2/events/';
 const ticketmasterAPIKey = process.env.TICKETMASTER_API_KEY;
 
 const TicketmasterController = (app) => {
-    app.get('/api/ticketmaster/events', findEventsInMA);
-    app.get('/api/ticketmaster/events/:eventId', getTicketmasterEventDetails);
+    app.get('/api/ticketmaster/events', findTicketmasterEventsInMA);
+    app.get('/api/ticketmaster/events/:eventId', checkTicketmasterEventIdExists, findTicketmasterEventById);
 };
 
-const findEventsInMA = async (req, res) => {
-    // TODO
+const findTicketmasterEventsInMA = async (req, res) => {
     const params = {
         apikey: ticketmasterAPIKey,
         stateCode: 'MA',
@@ -21,28 +21,12 @@ const findEventsInMA = async (req, res) => {
         keyword: req.query.keyword, // optional keyword parameter
         city: req.query.city, // optional city parameter
     };
-    axios.get(ticketmasterAPI, {params})
+    await axios.get(ticketmasterAPI, {params})
         .then(response => {
             const events = response.data._embedded.events;
             const eventsNameArray = [];
             events.map(event => {
-                let eventItem = {
-                    "_id": event.id,
-                    "name": event.name,
-                    "linkToBuy": event.url,
-                    "description": event.info,
-                    "date": event.dates.start.localDate,
-                    "time": event.dates.start.localTime,
-                    "segment": event.classifications[0].segment.name,
-                    "genre": event.classifications[0].genre.name,
-                    // TODO: subgenre does not work sometimes
-                    // "subgenre": event.classifications[0].subGenre.name,
-                    "image": event.images[0],
-                    "venueName": event._embedded.venues[0].name,
-                    "venueCity": event._embedded.venues[0].city.name,
-                    "venuePostalCode": event._embedded.venues[0].postalCode,
-                    "venueAddress": event._embedded.venues[0].address,
-                };
+                let eventItem = constructEventItem(event);
                 eventsNameArray.push(eventItem);
             })
             res.json(eventsNameArray);
@@ -52,39 +36,46 @@ const findEventsInMA = async (req, res) => {
             res.status(500).send('Error retrieving events. Contact developers for help.');
         });
 };
-
-const getTicketmasterEventDetails = async (req, res) => {
-    // TODO
+const findTicketmasterEventById = async (req, res) => {
     const eventId = req.params.eventId;
     const params = {
         apikey: ticketmasterAPIKey,
     };
     const link = `${ticketmasterAPIBase}${eventId}`;
-    axios.get(link, {params})
-        .then(response => {
-            const event = response.data;
-            const eventDetails = {
-                "_id": event.id,
-                "name": event.name,
-                "description": event.info,
-                "date": event.dates.start.localDate,
-                "time": event.dates.start.localTime,
-                "segment": event.classifications[0].segment.name,
-                "genre": event.classifications[0].genre.name,
-                "subgenre": event.classifications[0].subGenre.name,
-                "image": event.images[0],
-                "venueName": event._embedded.venues[0].name,
-                "venueCity": event._embedded.venues[0].city.name,
-                "venuePostalCode": event._embedded.venues[0].postalCode,
-                "venueAddress": event._embedded.venues[0].address,
-            };
-            res.json(eventDetails);
-        })
-        .catch(error => {
-            console.log(error);
-            res.status(500).send('Error retrieving event details. Contact developers for help.');
-        });
-    // findInterestedUsersByTicketmasterEventId
+    try {
+        const response = await axios.get(link, {params});
+        const event = response.data;
+        const eventDetails = constructEventItem(event);
+        // Add interestedUsers to eventDetails
+        const interestedUsers = await UsersDao.findInterestedUsersByTicketmasterEventId(eventDetails._id);
+        const eventDetailsWithInterestedUsers = {
+            ...eventDetails,
+            interestedUsers
+        }
+        res.json(eventDetailsWithInterestedUsers);
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).send('Error retrieving event details. Contact developers for help.');
+    }
+};
+const constructEventItem = (event) => {
+    const eventDetails = {
+        "_id": event.id,
+        "name": event.name ?? '',
+        "linkToBuy": event.url ?? '',
+        "description": event.info ?? '',
+        "date": event.dates?.start?.localDate ?? '',
+        "time": event.dates?.start?.localTime ?? '',
+        "segment": event.classifications[0]?.segment?.name ?? '',
+        "genre": event.classifications[0]?.genre?.name ?? '',
+        "subgenre": event.classifications[0]?.subGenre?.name ?? '',
+        "image": event.images[0]?.url ?? '',
+        "venueName": event._embedded?.venues[0]?.name ?? '',
+        "venueCity": event._embedded?.venues[0]?.city?.name ?? '',
+        "venuePostalCode": event._embedded?.venues[0]?.postalCode ?? '',
+        "venueAddress": event._embedded?.venues[0]?.address?.line1 ?? '',
+    };
+    return eventDetails;
 };
 
 export default TicketmasterController;

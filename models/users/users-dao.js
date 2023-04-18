@@ -20,4 +20,5 @@ export const pushTicketmasterEventOneUser = (userId, ticketmasterEventId) => Use
 export const pullTicketmasterEventOneUser = (userId, ticketmasterEventId) => UsersModel
     .updateOne({_id: userId}, {$pull: {likedTicketmasterEvents: ticketmasterEventId}});
 export const findInterestedUsersByTicketmasterEventId = (ticketmasterEventId) => UsersModel
-    .find({likedTicketmasterEvents: ticketmasterEventId});
+    .find({likedTicketmasterEvents: ticketmasterEventId})
+    .select('_id firstName lastName bio');

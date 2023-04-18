@@ -13,7 +13,7 @@ export const findEventsByCity = (cityRegex) => EventsModel
 export const findEventById = (eventId) => EventsModel
     .findById(eventId)
     .populate({path: 'organizer', select: '_id username name bio'})
-    .populate({path: 'interestedUsers', select: '_id firstName lastName'});
+    .populate({path: 'interestedUsers', select: '_id firstName lastName bio'});
 export const createEvent = (event) => EventsModel.create(event);
 export const deleteEvent = (eventId) => EventsModel.deleteOne({_id: eventId});
 export const deleteEventsByOrganizerId = (organizerId) => EventsModel
@@ -27,4 +27,4 @@ export const pullInterestedUserOneEvent = (eventId, userId) => EventsModel
     .updateOne({_id: eventId}, {$pull: {interestedUsers: userId}});
 export const findEventIdsByOrganizerId = (organizerId) => EventsModel
     .find({organizer: organizerId})
-    .select("_id");
+    .select('_id');
