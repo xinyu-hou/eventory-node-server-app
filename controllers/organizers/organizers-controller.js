@@ -10,6 +10,8 @@ import {
     sendActivationEmailByRole
 } from "../../utils/utils.js";
 import OrganizersModel from "../../models/organizers/organizers_model.js";
+import mongoose from "mongoose";
+import * as EventsDao from "../../models/events/events-dao.js";
 
 const OrganizersController = (app) => {
     app.get('/api/organizers', isCurrentUserAdmin, findAllOrganizers); // Admin only action
@@ -75,16 +77,33 @@ const createOrganizer = async (req, res) => {
     }
 };
 const deleteOrganizer = async (req, res) => {
-    const organizerId = req.params.organizerId;
-    await OrganizersDao.deleteOrganizer(organizerId)
-        .then((status) => {
-            return res.sendStatus(204); // No Content Status Code
-        })
-        .catch((error) => {
-           console.log('Failed to delete organizer: ' + error.message);
-           return res.status(400).json({ message: 'Failed to delete organizer.' });
+    const session = await mongoose.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const organizerId = req.params.organizerId;
+            try {
+                // (1) Delete organizer from Organizers table
+                const deleteStatus = await OrganizersDao.deleteOrganizer(organizerId);
+                console.log("deleteStatus");
+                console.log(deleteStatus);
+                // (2) Delete event(s) that have organizer as organizer in Events table
+                // (3) Remove event(s) from likedEvents in Users table
+                // TODO
+                // const updateStatus = await EventsDao.pullInterestedUserEvents(userId);
+                // console.log("updateStatus");
+                // console.log(updateStatus);
+                return res.sendStatus(204);
+            } catch (error) {
+                console.error('Failed to delete organizer: ', error.message);
+                return res.status(400).json({ message: 'Failed to delete organizer.' });
+            }
         });
-    // TODO: When an organizer is deleted, should it be reflected in the events collection?
+    } catch (error) {
+        console.error('Failed to delete organizer: ', error.message);
+        return res.status(500).json({ message: 'Server error.' });
+    } finally {
+        await session.endSession();
+    }
 };
 const updateOrganizer = async (req, res) => {
     try {

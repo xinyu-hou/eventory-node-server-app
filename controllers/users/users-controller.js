@@ -14,6 +14,7 @@ import {
 } from '../../utils/utils.js';
 import mongoose from "mongoose";
 import * as EventsDao from "../../models/events/events-dao.js";
+import {pullInterestedUserEvents} from "../../models/events/events-dao.js";
 
 const UsersController = (app) => {
     app.get('/api/users', isCurrentUserAdmin, findAllUsers); // Admin only action
@@ -82,16 +83,29 @@ const createUser = async (req, res) => {
     }
 };
 const deleteUser = async (req, res) => {
-    const userId = req.params.userId;
-    await UsersDao.deleteUser(userId)
-        .then((status) => {
-            return res.sendStatus(204); // No Content Status Code
-        })
-        .catch ((error) => {
-            console.log('Failed to delete user: ' + error.message)
-            return res.status(400).json({ message: 'Failed to delete user.' });
+    const session = await mongoose.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const userId = req.params.userId;
+            try {
+                const deleteStatus = await UsersDao.deleteUser(userId);
+                console.log("deleteStatus");
+                console.log(deleteStatus);
+                const updateStatus = await EventsDao.pullInterestedUserEvents(userId);
+                console.log("updateStatus");
+                console.log(updateStatus);
+                return res.sendStatus(204);
+            } catch (error) {
+                console.error('Failed to delete user: ', error.message);
+                return res.status(400).json({ message: 'Failed to delete user.' });
+            }
         });
-    // TODO: When a user is deleted, should it be reflected in the events collection?
+    } catch (error) {
+        console.error('Failed to delete user: ', error.message);
+        return res.status(500).json({ message: 'Server error.' });
+    } finally {
+        await session.endSession();
+    }
 };
 const updateUser = async (req, res) => {
     try {
