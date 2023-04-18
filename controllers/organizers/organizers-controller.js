@@ -1,4 +1,6 @@
 import * as OrganizersDao from "../../models/organizers/organizers_dao.js";
+import * as EventsDao from "../../models/events/events-dao.js";
+import * as UsersDao from "../../models/users/users-dao.js";
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import {
@@ -11,10 +13,6 @@ import {
 } from "../../utils/utils.js";
 import OrganizersModel from "../../models/organizers/organizers_model.js";
 import mongoose from "mongoose";
-import * as EventsDao from "../../models/events/events-dao.js";
-import {findOrganizerByIdPopulateEvents} from "../../models/organizers/organizers_dao.js";
-import {pullEventsUsers} from "../../models/users/users-dao.js";
-import * as UsersDao from "../../models/users/users-dao.js";
 
 const OrganizersController = (app) => {
     app.get('/api/organizers', isCurrentUserAdmin, findAllOrganizers); // Admin only action
@@ -90,7 +88,7 @@ const deleteOrganizer = async (req, res) => {
                 const eventIds = await EventsDao.findEventIdsByOrganizerId(organizerId);
                 console.log("eventIds");
                 console.log(eventIds);
-                // (2) Use map to remove event(s) from likedEvents in Users table
+                // (2) Remove event(s) from likedEvents in Users table
                 const updateUsersStatus = await UsersDao.pullEventsUsers(eventIds);
                 console.log("updateUsersStatus");
                 console.log(updateUsersStatus);

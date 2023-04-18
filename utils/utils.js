@@ -1,9 +1,9 @@
 import * as UsersDao from '../models/users/users-dao.js';
 import * as AdminsDao from '../models/admins/admins-dao.js';
 import * as OrganizersDao from "../models/organizers/organizers_dao.js";
+import * as EventsDao from "../models/events/events-dao.js";
 import nodemailer from "nodemailer";
 import mongoose from "mongoose";
-import * as EventsDao from "../models/events/events-dao.js";
 import { config } from 'dotenv';
 import axios from "axios";
 config();
@@ -86,7 +86,7 @@ export const isCurrentUserEventOrganizer = async (req, res, next) => {
     const eventId = req.params.eventId;
     const event = await EventsDao.findEventById(eventId);
     const eventOrganizerId = event.organizer._id.toString();
-    if (!currentUser || currentUser._id != eventOrganizerId) {
+    if (!currentUser || currentUser._id !== eventOrganizerId) {
         return res.status(401).json({ message: "Unauthorized." });
     }
     next();

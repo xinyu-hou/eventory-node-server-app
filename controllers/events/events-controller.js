@@ -1,14 +1,13 @@
 import * as EventsDao from '../../models/events/events-dao.js';
+import * as OrganizersDao from "../../models/organizers/organizers_dao.js";
+import * as UsersDao from "../../models/users/users-dao.js";
 import {
     checkEventIdExists,
-    isCurrentUserCurrentOrganizer,
     isCurrentUserEventOrganizer,
     isCurrentUserOrganizer
 } from "../../utils/utils.js";
 import mongoose from "mongoose";
 import EventsModel from "../../models/events/events-model.js";
-import * as OrganizersDao from "../../models/organizers/organizers_dao.js";
-import * as UsersDao from "../../models/users/users-dao.js";
 
 const EventsController = (app) => {
     app.get('/api/eventory/events', findEvents);

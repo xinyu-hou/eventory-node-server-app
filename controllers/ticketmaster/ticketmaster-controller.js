@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { config } from 'dotenv';
+import {findInterestedUsersByTicketmasterEventId} from "../../models/users/users-dao.js";
 config();
 
 const ticketmasterAPI = 'https://app.ticketmaster.com/discovery/v2/events.json?';
@@ -12,6 +13,7 @@ const TicketmasterController = (app) => {
 };
 
 const findEventsInMA = async (req, res) => {
+    // TODO
     const params = {
         apikey: ticketmasterAPIKey,
         stateCode: 'MA',
@@ -52,6 +54,7 @@ const findEventsInMA = async (req, res) => {
 };
 
 const getTicketmasterEventDetails = async (req, res) => {
+    // TODO
     const eventId = req.params.eventId;
     const params = {
         apikey: ticketmasterAPIKey,
@@ -81,6 +84,7 @@ const getTicketmasterEventDetails = async (req, res) => {
             console.log(error);
             res.status(500).send('Error retrieving event details. Contact developers for help.');
         });
+    // findInterestedUsersByTicketmasterEventId
 };
 
 export default TicketmasterController;

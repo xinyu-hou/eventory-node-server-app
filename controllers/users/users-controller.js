@@ -1,4 +1,5 @@
 import * as UsersDao from '../../models/users/users-dao.js'
+import * as EventsDao from "../../models/events/events-dao.js";
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import UsersModel from '../../models/users/users-model.js';
@@ -13,8 +14,6 @@ import {
     sendActivationEmailByRole
 } from '../../utils/utils.js';
 import mongoose from "mongoose";
-import * as EventsDao from "../../models/events/events-dao.js";
-import {pullInterestedUserEvents} from "../../models/events/events-dao.js";
 
 const UsersController = (app) => {
     app.get('/api/users', isCurrentUserAdmin, findAllUsers); // Admin only action

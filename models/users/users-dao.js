@@ -19,3 +19,5 @@ export const pushTicketmasterEventOneUser = (userId, ticketmasterEventId) => Use
     .updateOne({_id: userId}, {$addToSet: {likedTicketmasterEvents: ticketmasterEventId}});
 export const pullTicketmasterEventOneUser = (userId, ticketmasterEventId) => UsersModel
     .updateOne({_id: userId}, {$pull: {likedTicketmasterEvents: ticketmasterEventId}});
+export const findInterestedUsersByTicketmasterEventId = (ticketmasterEventId) => UsersModel
+    .find({likedTicketmasterEvents: ticketmasterEventId});
