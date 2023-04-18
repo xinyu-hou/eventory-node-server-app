@@ -12,6 +12,7 @@ import {
 import OrganizersModel from "../../models/organizers/organizers_model.js";
 import mongoose from "mongoose";
 import * as EventsDao from "../../models/events/events-dao.js";
+import {findOrganizerByIdPopulateEvents} from "../../models/organizers/organizers_dao.js";
 
 const OrganizersController = (app) => {
     app.get('/api/organizers', isCurrentUserAdmin, findAllOrganizers); // Admin only action
@@ -30,13 +31,14 @@ const findAllOrganizers = async (req, res) => {
 const findOrganizerById = async (req, res) => {
     try {
         const organizerId = req.params.organizerId;
-        const organizer = await OrganizersDao.findOrganizerById(organizerId);
-        // Only return non-sensitive info such as name, profilePicture, bio, and username(?)
+        const organizer = await OrganizersDao.findOrganizerByIdPopulateEvents(organizerId);
+        // Only return non-sensitive info such as name, profilePicture, bio, username, and events
         const limitedInfoOrganizer = {
             name: organizer.name,
             bio: organizer.bio,
             profilePicture: organizer.profilePicture,
-            username: organizer.username
+            username: organizer.username,
+            events: organizer.events
         };
         res.json(limitedInfoOrganizer);
     } catch (error) {
