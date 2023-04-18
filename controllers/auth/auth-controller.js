@@ -18,7 +18,6 @@ const everybodyLogin = async (req, res) => {
         }
         const userRole = user.role;
         const correctPassword = user.password;
-        const userFirstName = user.firstName;
         const passwordMatch = await bcrypt.compare(password, correctPassword);
         // When passwords do not match
         if (!passwordMatch) {

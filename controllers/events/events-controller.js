@@ -80,7 +80,7 @@ const findEventById = async (req, res) => {
     try {
         const eventId = req.params.eventId;
         const event = await EventsDao.findEventById(eventId);
-        const eventTime = event.getDateTimeInTimeZone('America/New York');
+        const eventTime = event.getDateTimeInTimeZone('America/New_York');
         console.log("Event time: " + eventTime);
         res.json(event);
     } catch (error) {

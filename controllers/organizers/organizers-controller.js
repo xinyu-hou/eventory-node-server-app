@@ -5,6 +5,7 @@ import {
     checkOrganizerIdExists,
     checkUsernameExistence,
     isCurrentUserAdmin,
+    isCurrentUserOrganizer,
     isCurrentUserCurrentOrganizer,
     sendActivationEmailByRole
 } from "../../utils/utils.js";
@@ -16,6 +17,7 @@ const OrganizersController = (app) => {
     app.post('/api/organizers', createOrganizer);
     app.delete('/api/organizers/:organizerId', checkOrganizerIdExists, isCurrentUserAdmin, deleteOrganizer); // Admin only action
     app.put('/api/organizers/:organizerId', checkOrganizerIdExists, isCurrentUserCurrentOrganizer, updateOrganizer); // One organizer only action
+    app.put('/api/organizers/organizer/resetpassword', isCurrentUserOrganizer, resetOrganizerPassword); // Organizer only action
     app.get('/api/organizers/verify/:token', verifyOrganizer);
 };
 
@@ -96,6 +98,34 @@ const updateOrganizer = async (req, res) => {
         res.json(status);
     } catch (error) {
         console.error('Failed to update organizer: ', error.message);
+        return res.status(500).json({ message: 'Server error.' });
+    }
+};
+const resetOrganizerPassword = async (req, res) => {
+    try {
+        // Retrieve password from currentUser session
+        const currentOrganizer = req.session["currentUser"];
+        const currentOrganizerPassword = currentOrganizer.password;
+        const currentOrganizerId = currentOrganizer._id;
+        // Retrieve oldPassword and newPassword from req parameters
+        const { oldPassword, newPassword } = req.body;
+        // Check if oldPassword matches with currentOrganizerPassword
+        const passwordMatch = await bcrypt.compare(oldPassword, currentOrganizerPassword);
+        // When passwords do not match
+        if (!passwordMatch) {
+            const errorMessage = 'Invalid password.';
+            return res.status(400).json({ message: errorMessage });
+        }
+        // When entered oldPassword is valid, encrypt the newPassword and update user info
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const updates = { password: hashedPassword };
+        const status = await OrganizersDao.updateOrganizer(currentOrganizerId, updates);
+        const updatedOrganizer = await OrganizersDao.findOrganizerById(currentOrganizerId);
+        // Store the updated organizer information in the req.session['currentUser'] variable
+        req.session["currentUser"] = updatedOrganizer;
+        res.json(status);
+    } catch (error) {
+        console.error('Failed to reset organizer password: ', error.message);
         return res.status(500).json({ message: 'Server error.' });
     }
 };

@@ -14,7 +14,6 @@ import {
 } from '../../utils/utils.js';
 import mongoose from "mongoose";
 import * as EventsDao from "../../models/events/events-dao.js";
-import {pushTicketmasterEventOneUser} from "../../models/users/users-dao.js";
 
 const UsersController = (app) => {
     app.get('/api/users', isCurrentUserAdmin, findAllUsers); // Admin only action
@@ -24,6 +23,7 @@ const UsersController = (app) => {
     app.put('/api/users/:userId', checkUserIdExists, isCurrentUserCurrentUser, updateUser); // One user only action
     app.put('/api/users/eventory/:eventId', checkEventIdExists, isCurrentUserUser, likeOrDislikeEventoryEvent); // User only action
     app.put('/api/users/ticketmaster/:eventId', checkTicketmasterEventIdExists, isCurrentUserUser, likeOrDislikeTicketmasterEvent); // User only action
+    app.put('/api/users/user/resetpassword', isCurrentUserUser, resetUserPassword); // User only action
     app.get('/api/users/verify/:token', verifyUser);
 };
 
@@ -218,6 +218,34 @@ const dislikeTicketmasterEvent = async (req, res, userId, eventId) => {
     } catch (error) {
         console.error('Failed to dislike Ticketmaster event: ', error.message);
         return res.status(400).json({ message: 'Failed to dislike Ticketmaster event.' });
+    }
+};
+const resetUserPassword = async (req, res) => {
+    try {
+        // Retrieve password from currentUser session
+        const currentUser = req.session["currentUser"];
+        const currentUserPassword = currentUser.password;
+        const currentUserId = currentUser._id;
+        // Retrieve oldPassword and newPassword from req parameters
+        const { oldPassword, newPassword } = req.body;
+        // Check if oldPassword matches with currentUserPassword
+        const passwordMatch = await bcrypt.compare(oldPassword, currentUserPassword);
+        // When passwords do not match
+        if (!passwordMatch) {
+            const errorMessage = 'Invalid password.';
+            return res.status(400).json({ message: errorMessage });
+        }
+        // When entered oldPassword is valid, encrypt the newPassword and update user info
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const updates = { password: hashedPassword };
+        const status = await UsersDao.updateUser(currentUserId, updates);
+        const updatedUser = await UsersDao.findUserById(currentUserId);
+        // Store the updated user information in the req.session['currentUser'] variable
+        req.session["currentUser"] = updatedUser;
+        res.json(status);
+    } catch (error) {
+        console.error('Failed to reset user password: ', error.message);
+        return res.status(500).json({ message: 'Server error.' });
     }
 };
 const verifyUser = async (req, res) => {
