@@ -88,12 +88,8 @@ const deleteUser = async (req, res) => {
         await session.withTransaction(async () => {
             const userId = req.params.userId;
             try {
-                const deleteStatus = await UsersDao.deleteUser(userId);
-                console.log("deleteStatus");
-                console.log(deleteStatus);
-                const updateStatus = await EventsDao.pullInterestedUserEvents(userId);
-                console.log("updateStatus");
-                console.log(updateStatus);
+                await UsersDao.deleteUser(userId);
+                await EventsDao.pullInterestedUserEvents(userId);
                 return res.sendStatus(204);
             } catch (error) {
                 console.error('Failed to delete user: ', error.message);
@@ -152,11 +148,7 @@ const likeOrDislikeEventoryEvent = async (req, res) => {
 const likeEventoryEvent = async (req, res, userId, eventId) => {
     try {
         const updatedUserStatus = await UsersDao.pushEventoryEventOneUser(userId, eventId);
-        console.log("updatedUserStatus");
-        console.log(updatedUserStatus);
-        const updatedEventStatus = await EventsDao.pushInterestedUserOneEvent(eventId, userId);
-        console.log("updatedEventStatus");
-        console.log(updatedEventStatus);
+        await EventsDao.pushInterestedUserOneEvent(eventId, userId);
         const updatedUser = await UsersDao.findUserById(userId);
         req.session["currentUser"] = updatedUser;
         res.json(updatedUserStatus);
@@ -168,11 +160,7 @@ const likeEventoryEvent = async (req, res, userId, eventId) => {
 const dislikeEventoryEvent = async (req, res, userId, eventId) => {
     try {
         const updatedUserStatus = await UsersDao.pullEventoryEventOneUser(userId, eventId);
-        console.log("updatedUserStatus");
-        console.log(updatedUserStatus);
-        const updatedEventStatus = await EventsDao.pullInterestedUserOneEvent(eventId, userId);
-        console.log("updatedEventStatus");
-        console.log(updatedEventStatus);
+        await EventsDao.pullInterestedUserOneEvent(eventId, userId);
         const updatedUser = await UsersDao.findUserById(userId);
         req.session["currentUser"] = updatedUser;
         res.json(updatedUserStatus);
@@ -211,8 +199,6 @@ const likeOrDislikeTicketmasterEvent = async (req, res) => {
 const likeTicketmasterEvent = async (req, res, userId, eventId) => {
     try {
         const updatedUserStatus = await UsersDao.pushTicketmasterEventOneUser(userId, eventId);
-        console.log("updatedUserStatus");
-        console.log(updatedUserStatus);
         const updatedUser = await UsersDao.findUserById(userId);
         req.session["currentUser"] = updatedUser;
         res.json(updatedUserStatus);
@@ -224,8 +210,6 @@ const likeTicketmasterEvent = async (req, res, userId, eventId) => {
 const dislikeTicketmasterEvent = async (req, res, userId, eventId) => {
     try {
         const updatedUserStatus = await UsersDao.pullTicketmasterEventOneUser(userId, eventId);
-        console.log("updatedUserStatus");
-        console.log(updatedUserStatus);
         const updatedUser = await UsersDao.findUserById(userId);
         req.session["currentUser"] = updatedUser;
         res.json(updatedUserStatus);

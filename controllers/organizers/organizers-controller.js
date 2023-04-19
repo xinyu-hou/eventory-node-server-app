@@ -86,20 +86,12 @@ const deleteOrganizer = async (req, res) => {
             try {
                 // (1) Find event(s) that have organizer as organizer in Events table
                 const eventIds = await EventsDao.findEventIdsByOrganizerId(organizerId);
-                console.log("eventIds");
-                console.log(eventIds);
                 // (2) Remove event(s) from likedEvents in Users table
-                const updateUsersStatus = await UsersDao.pullEventsUsers(eventIds);
-                console.log("updateUsersStatus");
-                console.log(updateUsersStatus);
+                await UsersDao.pullEventsUsers(eventIds);
                 // (3) Delete event(s) that have organizer as organizer in Events table
-                const deleteEventsStatus = await EventsDao.deleteEventsByOrganizerId(organizerId);
-                console.log("deleteEventsStatus");
-                console.log(deleteEventsStatus);
+                await EventsDao.deleteEventsByOrganizerId(organizerId);
                 // (4) Delete organizer from Organizers table
-                const deleteOrganizerStatus = await OrganizersDao.deleteOrganizer(organizerId);
-                console.log("deleteOrganizerStatus");
-                console.log(deleteOrganizerStatus);
+                await OrganizersDao.deleteOrganizer(organizerId);
                 return res.sendStatus(204);
             } catch (error) {
                 console.error('Failed to delete organizer: ', error.message);

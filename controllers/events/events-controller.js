@@ -76,8 +76,6 @@ const findEventById = async (req, res) => {
     try {
         const eventId = req.params.eventId;
         const event = await EventsDao.findEventById(eventId);
-        const eventTime = event.getDateTimeInTimeZone('America/New_York');
-        console.log("Event time: " + eventTime);
         res.json(event);
     } catch (error) {
         console.error('Failed to find event: ', error.message);
@@ -100,11 +98,7 @@ const createEvent = async (req, res) => {
             // Insert complete event into database.
             try {
                 const createdEvent = await EventsDao.createEvent(completeEvent);
-                console.log("createdEvent");
-                console.log(createdEvent);
                 const updatedStatus = await OrganizersDao.pushEventOrganizer(organizerId, createdEvent._id);
-                console.log("updatedStatus");
-                console.log(updatedStatus);
                 const updatedOrganizer = await OrganizersDao.findOrganizerById(organizerId);
                 req.session["currentUser"] = updatedOrganizer;
                 const successMessage = `Event ${createdEvent._id} created.`;
@@ -131,16 +125,10 @@ const deleteEvent = async (req, res) => {
             const organizerId = currentUser._id;
             try {
                 const deleteStatus = await EventsDao.deleteEvent(eventId);
-                console.log("deleteStatus");
-                console.log(deleteStatus);
                 const updateOrganizerStatus = await OrganizersDao.pullEventOrganizer(organizerId, eventId);
                 const updatedOrganizer = await OrganizersDao.findOrganizerById(organizerId);
                 req.session["currentUser"] = updatedOrganizer;
-                console.log("updateOrganizerStatus");
-                console.log(updateOrganizerStatus);
                 const updateUsersStatus = await UsersDao.pullEventUsers(eventId);
-                console.log("updateUsersStatus");
-                console.log(updateUsersStatus);
                 return res.sendStatus(204);
             } catch (error) {
                 console.error('Failed to delete event: ', error.message);

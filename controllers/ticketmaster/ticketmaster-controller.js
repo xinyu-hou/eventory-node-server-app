@@ -36,7 +36,7 @@ const findTicketmasterEventsInMA = async (req, res) => {
                 console.error(error.message);
                 return res.status(429).json({ message: 'Exceeded Ticketmaster API rate limit. Please wait and try again.' });
             }
-            console.log(error);
+            console.error(error);
             return res.status(500).json({ message: 'Error retrieving events. Contact developers for help.' });
         });
 };
@@ -62,7 +62,7 @@ const findTicketmasterEventById = async (req, res) => {
             console.error(error.message);
             return res.status(429).json({ message: 'Exceeded Ticketmaster API rate limit. Please wait and try again.' });
         }
-        console.log(error.message);
+        console.error(error.message);
         return res.status(500).json({ message: 'Error retrieving event details. Contact developers for help.' });
     }
 };

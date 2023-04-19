@@ -28,7 +28,7 @@ const createAdmin = async (req, res) => {
         if (usernameExistence) {
             const errorMessage = 'User with this username already exists.';
             return res.status(400).json({ message: errorMessage });
-        };
+        }
         const hashedPassword = await bcrypt.hash(password, 10);
         const admin = req.body;
         const newAdmin = new AdminsModel({
@@ -39,7 +39,7 @@ const createAdmin = async (req, res) => {
         return res.status(201).json({ message: 'Admin created.' });
     } catch (error) {
         console.log("Failed to create admin: " + error.message);
-    };
+    }
 };
 
 export default AdminsController;
