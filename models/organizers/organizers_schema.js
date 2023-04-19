@@ -7,7 +7,7 @@ const OrganizersSchema = new mongoose.Schema({
     activated: { type: Boolean, default: false },
     activationToken: String,
     name: { type: String, required: true },
-    profilePicture: Buffer,
+    profilePicture: String,
     bio: String,
     events: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EventsModel' }]
 }, {collection: 'organizers'});

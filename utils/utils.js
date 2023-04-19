@@ -139,6 +139,9 @@ export const checkTicketmasterEventIdExists = async (req, res, next) => {
     } catch (error) {
         if (error. response && error.response.status === 404) {
             return res.status(404).json({ message: 'Ticketmaster event not found.' });
+        } else if (error.response && error.response.status === 429) {
+            console.error(error.message);
+            return res.status(429).json({message: 'Exceeded Ticketmaster API rate limit. Please wait and try again.'});
         }
         return res.status(500).json({ message: 'Something went wrong.' });
     }

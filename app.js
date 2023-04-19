@@ -15,7 +15,6 @@ import AuthController from "./controllers/auth/auth-controller.js";
 config();
 const CONNECTION_STRING = process.env.DB_CONNECTION_STRING;
 // Connect to MongoDB.
-// TODO: Remove debug lines when in production.
 mongoose.connect(CONNECTION_STRING)
     .then(() => {
         console.log('Connected to MongoDB.');
