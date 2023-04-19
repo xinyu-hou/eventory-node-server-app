@@ -18,7 +18,7 @@ const EventsController = (app) => {
 };
 
 const findEvents = async (req, res) => {
-    const { city, keyword } = req.body;
+    const { city, keyword } = req.query;
     if (city && keyword) {
         // handle findEventsByCityAndKeyword
         // query events with both city and keyword
