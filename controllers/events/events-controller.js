@@ -11,9 +11,6 @@ import EventsModel from "../../models/events/events-model.js";
 
 const EventsController = (app) => {
     app.get('/api/eventory/events', findEvents);
-    app.get('/api/eventory/events/city/:city', findEvents);
-    app.get('/api/eventory/events/keyword/:keyword', findEvents);
-    app.get('/api/eventory/events/city/:city/keyword/:keyword', findEvents);
     app.get('/api/eventory/events/:eventId', checkEventIdExists, findEventById);
     app.post('/api/eventory/events', isCurrentUserOrganizer, createEvent); // Organizer only action
     app.delete('/api/eventory/events/:eventId', checkEventIdExists, isCurrentUserEventOrganizer, deleteEvent); // One organizer only action
@@ -21,7 +18,7 @@ const EventsController = (app) => {
 };
 
 const findEvents = async (req, res) => {
-    const { city, keyword } = req.params;
+    const { city, keyword } = req.body;
     if (city && keyword) {
         // handle findEventsByCityAndKeyword
         // query events with both city and keyword
@@ -38,7 +35,7 @@ const findEvents = async (req, res) => {
         // handle findAllEvents
         // query all events
         await findAllEvents(res);
-    };
+    }
 };
 const findEventsByCityAndKeyword = async (city, keyword, res) => {
     try {
