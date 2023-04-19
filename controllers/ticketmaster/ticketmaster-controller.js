@@ -23,17 +23,21 @@ const findTicketmasterEventsInMA = async (req, res) => {
     };
     await axios.get(ticketmasterAPI, {params})
         .then(response => {
-            const events = response.data._embedded.events;
+            const events = response.data._embedded?.events ?? [] ;
             const eventsNameArray = [];
             events.map(event => {
                 let eventItem = constructEventItem(event);
                 eventsNameArray.push(eventItem);
             })
-            res.json(eventsNameArray);
+            return res.json(eventsNameArray);
         })
         .catch(error => {
+            if (error.response && error.response.status === 429) {
+                console.error(error.message);
+                return res.status(429).json({ message: 'Exceeded Ticketmaster API rate limit. Please wait and try again.' });
+            }
             console.log(error);
-            res.status(500).send('Error retrieving events. Contact developers for help.');
+            return res.status(500).json({ message: 'Error retrieving events. Contact developers for help.' });
         });
 };
 const findTicketmasterEventById = async (req, res) => {
@@ -54,8 +58,12 @@ const findTicketmasterEventById = async (req, res) => {
         }
         res.json(eventDetailsWithInterestedUsers);
     } catch (error) {
+        if (error.response && error.response.status === 429) {
+            console.error(error.message);
+            return res.status(429).json({ message: 'Exceeded Ticketmaster API rate limit. Please wait and try again.' });
+        }
         console.log(error.message);
-        res.status(500).send('Error retrieving event details. Contact developers for help.');
+        return res.status(500).json({ message: 'Error retrieving event details. Contact developers for help.' });
     }
 };
 const constructEventItem = (event) => {

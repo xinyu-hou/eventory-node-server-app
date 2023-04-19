@@ -41,7 +41,8 @@ const findUserById = async (req, res) => {
             lastName: user.lastName,
             bio: user.bio,
             profilePicture: user.profilePicture,
-            likedEvents: user.likedEvents
+            likedEvents: user.likedEvents,
+            likedTicketmasterEvents: user.likedTicketmasterEvents
         };
         res.json(limitedInfoUser);
     } catch (error) {
