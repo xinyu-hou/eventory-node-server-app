@@ -25,8 +25,13 @@ const OrganizersController = (app) => {
 };
 
 const findAllOrganizers = async (req, res) => {
-    const organizers = await OrganizersDao.findAllOrganizers();
-    res.json(organizers);
+    try {
+        const organizers = await OrganizersDao.findAllOrganizers();
+        res.json(organizers);
+    } catch (error) {
+        console.error('Failed to retrieve organizers: ', error.message);
+        return res.status(500).json({ message: 'Server error.' });
+    }
 };
 const findOrganizerById = async (req, res) => {
     try {

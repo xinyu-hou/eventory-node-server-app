@@ -28,8 +28,14 @@ const UsersController = (app) => {
 };
 
 const findAllUsers = async (req, res) => {
-    const users = await UsersDao.findAllUsers();
-    res.json(users);
+    try {
+        const users = await UsersDao.findAllUsers();
+        return res.json(users);
+    } catch (error) {
+        console.error('Failed to retrieve users: ', error.message);
+        return res.status(500).json({ message: 'Server error.' });
+    }
+
 };
 const findUserById = async (req, res) => {
     try {
