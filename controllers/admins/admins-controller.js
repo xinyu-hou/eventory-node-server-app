@@ -38,7 +38,7 @@ const createAdmin = async (req, res) => {
         const insertedAdmin = await AdminsDao.createAdmin(newAdmin);
         return res.status(201).json({ message: 'Admin created.' });
     } catch (error) {
-        console.log("Failed to create admin: " + error.message);
+        console.error("Failed to create admin: " + error.message);
     }
 };
 
