@@ -1,5 +1,5 @@
-import * as UsersDao from '../../models/users/users-dao.js'
-import * as EventsDao from "../../models/events/events-dao.js";
+import * as UsersDao from '../../models/users/users-dao.js';
+import * as EventsDao from '../../models/events/events-dao.js';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import UsersModel from '../../models/users/users-model.js';
@@ -11,18 +11,33 @@ import {
     isCurrentUserAdmin,
     isCurrentUserUser,
     isCurrentUserCurrentUser,
-    sendActivationEmailByRole
+    sendActivationEmailByRole,
 } from '../../utils/utils.js';
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const UsersController = (app) => {
     app.get('/api/users', isCurrentUserAdmin, findAllUsers); // Admin only action
     app.get('/api/users/:userId', checkUserIdExists, findUserById);
     app.post('/api/users', createUser);
     app.delete('/api/users/:userId', checkUserIdExists, isCurrentUserAdmin, deleteUser); // Admin only action
-    app.put('/api/users/:userId', checkUserIdExists, isCurrentUserCurrentUser, updateUser); // One user only action
-    app.put('/api/users/eventory/:eventId', checkEventIdExists, isCurrentUserUser, likeOrDislikeEventoryEvent); // User only action
-    app.put('/api/users/ticketmaster/:eventId', checkTicketmasterEventIdExists, isCurrentUserUser, likeOrDislikeTicketmasterEvent); // User only action
+    app.put(
+        '/api/users/:userId',
+        checkUserIdExists,
+        isCurrentUserCurrentUser,
+        updateUser
+    ); // One user only action
+    app.put(
+        '/api/users/eventory/:eventId',
+        checkEventIdExists,
+        isCurrentUserUser,
+        likeOrDislikeEventoryEvent
+    ); // User only action
+    app.put(
+        '/api/users/ticketmaster/:eventId',
+        checkTicketmasterEventIdExists,
+        isCurrentUserUser,
+        likeOrDislikeTicketmasterEvent
+    ); // User only action
     app.put('/api/users/user/resetpassword', isCurrentUserUser, resetUserPassword); // User only action
     app.get('/api/users/verify/:token', verifyUser);
 };
@@ -35,7 +50,6 @@ const findAllUsers = async (req, res) => {
         console.error('Failed to retrieve users: ', error.message);
         return res.status(500).json({ message: 'Server error.' });
     }
-
 };
 const findUserById = async (req, res) => {
     try {
@@ -46,9 +60,10 @@ const findUserById = async (req, res) => {
             firstName: user.firstName,
             lastName: user.lastName,
             bio: user.bio,
+            location: user.location,
             profilePicture: user.profilePicture,
             likedEvents: user.likedEvents,
-            likedTicketmasterEvents: user.likedTicketmasterEvents
+            likedTicketmasterEvents: user.likedTicketmasterEvents,
         };
         res.json(limitedInfoUser);
     } catch (error) {
@@ -71,7 +86,7 @@ const createUser = async (req, res) => {
         const newUser = new UsersModel({
             ...user,
             password: hashedPassword,
-            activationToken
+            activationToken,
         });
         // Insert user into database.
         try {
@@ -82,7 +97,9 @@ const createUser = async (req, res) => {
         }
         // Send an account activation email to user.
         await sendActivationEmailByRole(username, activationToken, 'users');
-        return res.status(201).json({ message: 'Please check your email and activate your account.' });
+        return res
+            .status(201)
+            .json({ message: 'Please check your email and activate your account.' });
     } catch (error) {
         console.error('Failed to register user: ', error.message);
         return res.status(500).json({ message: 'Server error.' });
@@ -117,7 +134,7 @@ const updateUser = async (req, res) => {
         // Fetch the updated user information from the database
         const updatedUser = await UsersDao.findUserById(userId);
         // Store the updated user information in the req.session['currentUser'] variable
-        req.session["currentUser"] = updatedUser;
+        req.session['currentUser'] = updatedUser;
         res.json(status);
     } catch (error) {
         console.error('Failed to update user: ', error.message);
@@ -128,7 +145,7 @@ const likeOrDislikeEventoryEvent = async (req, res) => {
     const session = await mongoose.startSession();
     try {
         await session.withTransaction(async () => {
-            const currentUser = req.session["currentUser"];
+            const currentUser = req.session['currentUser'];
             const userId = currentUser._id;
             // Retrieve eventId from req parameters
             const eventId = req.params.eventId;
@@ -153,10 +170,13 @@ const likeOrDislikeEventoryEvent = async (req, res) => {
 };
 const likeEventoryEvent = async (req, res, userId, eventId) => {
     try {
-        const updatedUserStatus = await UsersDao.pushEventoryEventOneUser(userId, eventId);
+        const updatedUserStatus = await UsersDao.pushEventoryEventOneUser(
+            userId,
+            eventId
+        );
         await EventsDao.pushInterestedUserOneEvent(eventId, userId);
         const updatedUser = await UsersDao.findUserById(userId);
-        req.session["currentUser"] = updatedUser;
+        req.session['currentUser'] = updatedUser;
         res.json(updatedUserStatus);
     } catch (error) {
         console.error('Failed to like Eventory event: ', error.message);
@@ -165,10 +185,13 @@ const likeEventoryEvent = async (req, res, userId, eventId) => {
 };
 const dislikeEventoryEvent = async (req, res, userId, eventId) => {
     try {
-        const updatedUserStatus = await UsersDao.pullEventoryEventOneUser(userId, eventId);
+        const updatedUserStatus = await UsersDao.pullEventoryEventOneUser(
+            userId,
+            eventId
+        );
         await EventsDao.pullInterestedUserOneEvent(eventId, userId);
         const updatedUser = await UsersDao.findUserById(userId);
-        req.session["currentUser"] = updatedUser;
+        req.session['currentUser'] = updatedUser;
         res.json(updatedUserStatus);
     } catch (error) {
         console.error('Failed to dislike Eventory event: ', error.message);
@@ -179,7 +202,7 @@ const likeOrDislikeTicketmasterEvent = async (req, res) => {
     const session = await mongoose.startSession();
     try {
         await session.withTransaction(async () => {
-            const currentUser = req.session["currentUser"];
+            const currentUser = req.session['currentUser'];
             const userId = currentUser._id;
             // Retrieve eventId from req parameters
             const eventId = req.params.eventId;
@@ -204,9 +227,12 @@ const likeOrDislikeTicketmasterEvent = async (req, res) => {
 };
 const likeTicketmasterEvent = async (req, res, userId, eventId) => {
     try {
-        const updatedUserStatus = await UsersDao.pushTicketmasterEventOneUser(userId, eventId);
+        const updatedUserStatus = await UsersDao.pushTicketmasterEventOneUser(
+            userId,
+            eventId
+        );
         const updatedUser = await UsersDao.findUserById(userId);
-        req.session["currentUser"] = updatedUser;
+        req.session['currentUser'] = updatedUser;
         res.json(updatedUserStatus);
     } catch (error) {
         console.error('Failed to like Ticketmaster event: ', error.message);
@@ -215,9 +241,12 @@ const likeTicketmasterEvent = async (req, res, userId, eventId) => {
 };
 const dislikeTicketmasterEvent = async (req, res, userId, eventId) => {
     try {
-        const updatedUserStatus = await UsersDao.pullTicketmasterEventOneUser(userId, eventId);
+        const updatedUserStatus = await UsersDao.pullTicketmasterEventOneUser(
+            userId,
+            eventId
+        );
         const updatedUser = await UsersDao.findUserById(userId);
-        req.session["currentUser"] = updatedUser;
+        req.session['currentUser'] = updatedUser;
         res.json(updatedUserStatus);
     } catch (error) {
         console.error('Failed to dislike Ticketmaster event: ', error.message);
@@ -227,7 +256,7 @@ const dislikeTicketmasterEvent = async (req, res, userId, eventId) => {
 const resetUserPassword = async (req, res) => {
     try {
         // Retrieve password from currentUser session
-        const currentUser = req.session["currentUser"];
+        const currentUser = req.session['currentUser'];
         const currentUserPassword = currentUser.password;
         const currentUserId = currentUser._id;
         // Retrieve oldPassword and newPassword from req parameters
@@ -245,7 +274,7 @@ const resetUserPassword = async (req, res) => {
         const status = await UsersDao.updateUser(currentUserId, updates);
         const updatedUser = await UsersDao.findUserById(currentUserId);
         // Store the updated user information in the req.session['currentUser'] variable
-        req.session["currentUser"] = updatedUser;
+        req.session['currentUser'] = updatedUser;
         res.json(status);
     } catch (error) {
         console.error('Failed to reset user password: ', error.message);
@@ -264,10 +293,12 @@ const verifyUser = async (req, res) => {
         // If a user is found, set the activation attribute to true.
         const updates = { activated: true };
         await UsersDao.updateUser(user._id, updates);
-        return res.status(200).json({ message: 'Your Eventory account has been activated.' });
+        return res
+            .status(200)
+            .json({ message: 'Your Eventory account has been activated.' });
     } catch (error) {
         console.error('Failed to verify user: ', error.message);
-        return res.status(500).json({ message: 'Server error.'});
+        return res.status(500).json({ message: 'Server error.' });
     }
 };
 
